@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { getProductById } from '@/app/actions/products'
+import { getProducts, initializeStorage } from '@/lib/storage'
 
 interface Product {
   id: string
@@ -31,10 +31,12 @@ export default function ProductDetail() {
   const [added, setAdded] = useState(false)
 
   useEffect(() => {
-    const loadProduct = async () => {
+    const loadProduct = () => {
       try {
-        const prod = await getProductById(params.id as string)
-        setProduct(prod as Product || null)
+        initializeStorage()
+        const allProducts = getProducts()
+        const prod = allProducts.find(p => p.id === (params.id as string))
+        setProduct(prod || null)
         if (!prod) {
           setError('Product not found')
         }
@@ -46,7 +48,7 @@ export default function ProductDetail() {
     }
 
     loadProduct()
-  }, [params.id])
+  }, [params.id, params])
 
   const handleAddToCart = () => {
     if (product) {
