@@ -6,55 +6,101 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { getProductById, initializeStorage, addToCart } from '@/lib/storage'
-import { Product } from '@/lib/types'
+import { getProductById } from '@/app/actions/products'
+
+interface Product {
+  id: string
+  name: string
+  description: string
+  price: string | number
+  image: string
+  category: string
+  subcategory: string
+  stock: number
+  createdAt?: Date
+  updatedAt?: Date
+}
 
 export default function ProductDetail() {
   const params = useParams()
   const router = useRouter()
   const [product, setProduct] = useState<Product | null>(null)
   const [quantity, setQuantity] = useState(1)
-  const [selectedSize, setSelectedSize] = useState('')
-  const [selectedVariant, setSelectedVariant] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [added, setAdded] = useState(false)
 
   useEffect(() => {
-    initializeStorage()
-    const prod = getProductById(params.id as string)
-    setProduct(prod || null)
-    
-    if (prod?.sizes) {
-      setSelectedSize(prod.sizes[0])
+    const loadProduct = async () => {
+      try {
+        const prod = await getProductById(params.id as string)
+        setProduct(prod as Product || null)
+        if (!prod) {
+          setError('Product not found')
+        }
+      } catch (err) {
+        setError('Failed to load product')
+      } finally {
+        setLoading(false)
+      }
     }
-    if (prod?.variants) {
-      setSelectedVariant(prod.variants[0].id)
-    }
+
+    loadProduct()
   }, [params.id])
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart({
-        productId: product.id,
-        quantity,
-        size: selectedSize,
-        variant: selectedVariant,
-      })
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      const existingItem = cart.find((item: any) => item.productId === product.id)
+
+      if (existingItem) {
+        existingItem.quantity += quantity
+      } else {
+        cart.push({
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity,
+        })
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart))
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
     }
   }
 
-  if (!product) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Product not found</p>
+          <p className="text-muted-foreground">Loading product...</p>
         </main>
         <Footer />
       </div>
     )
   }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">{error || 'Product not found'}</p>
+            <Link href="/products" className="text-accent font-semibold hover:underline">
+              Back to Products
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  const price = parseFloat(product.price.toString()).toFixed(2)
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -62,14 +108,26 @@ export default function ProductDetail() {
 
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <Link href="/products" className="text-accent hover:text-foreground transition-colors mb-8">
-            &larr; Back to Shop
-          </Link>
+          {/* Breadcrumb */}
+          <div className="mb-8 flex items-center gap-2 text-sm">
+            <Link href="/products" className="text-accent hover:underline">
+              Products
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <Link
+              href={`/products?category=${product.category}`}
+              className="text-accent hover:underline capitalize"
+            >
+              {product.category}
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <span className="text-foreground capitalize">{product.name}</span>
+          </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
             {/* Product Image */}
-            <div>
-              <div className="relative h-96 bg-secondary/30 overflow-hidden">
+            <div className="flex items-center justify-center">
+              <div className="relative w-full aspect-square bg-secondary/30 rounded-lg overflow-hidden">
                 <Image
                   src={product.image}
                   alt={product.name}
@@ -80,76 +138,47 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Product Info */}
-            <div>
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground capitalize mb-2">{product.subcategory}</p>
-                <h1 className="font-heading text-4xl font-bold mb-4">{product.name}</h1>
-              </div>
-
-              <div className="mb-6 pb-6 border-b border-border">
-                <p className="font-heading text-3xl font-bold">${product.price}</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+            {/* Product Details */}
+            <div className="flex flex-col justify-center">
+              <div className="mb-6">
+                <p className="text-sm text-accent font-semibold uppercase tracking-wide mb-2">
+                  {product.subcategory}
                 </p>
+                <h1 className="font-heading text-4xl font-bold mb-4 text-foreground">{product.name}</h1>
+                <p className="text-3xl font-semibold text-foreground mb-6">${price}</p>
+                <p className="text-lg text-muted-foreground leading-relaxed">{product.description}</p>
               </div>
 
-              <p className="text-muted-foreground mb-8 leading-relaxed">{product.description}</p>
+              {/* Stock Status */}
+              <div className="mb-6">
+                {product.stock > 0 ? (
+                  <p className="text-sm text-green-600 font-semibold">In Stock ({product.stock} available)</p>
+                ) : (
+                  <p className="text-sm text-destructive font-semibold">Out of Stock</p>
+                )}
+              </div>
 
-              {/* Size Selector */}
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-3">Size</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {product.sizes.map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`py-2 border transition-colors ${
-                          selectedSize === size
-                            ? 'border-foreground bg-foreground text-background'
-                            : 'border-border hover:border-foreground'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Variant Selector */}
-              {product.variants && product.variants.length > 0 && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-3">Style</label>
-                  <select
-                    value={selectedVariant}
-                    onChange={(e) => setSelectedVariant(e.target.value)}
-                    className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                  >
-                    {product.variants.map(variant => (
-                      <option key={variant.id} value={variant.id}>
-                        {variant.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Quantity */}
+              {/* Quantity Selector */}
               <div className="mb-8">
-                <label className="block text-sm font-medium mb-3">Quantity</label>
+                <label className="block text-sm font-semibold text-foreground mb-3">Quantity</label>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-4 py-2 border border-border hover:bg-secondary transition-colors"
+                    className="px-4 py-2 border border-border rounded hover:bg-secondary transition-colors"
                   >
                     −
                   </button>
-                  <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-16 px-3 py-2 border border-border rounded text-center bg-background"
+                    min="1"
+                    max={product.stock}
+                  />
                   <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="px-4 py-2 border border-border hover:bg-secondary transition-colors"
+                    className="px-4 py-2 border border-border rounded hover:bg-secondary transition-colors"
                   >
                     +
                   </button>
@@ -160,26 +189,27 @@ export default function ProductDetail() {
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                className={`w-full py-3 font-semibold text-lg transition-colors ${
-                  added
-                    ? 'bg-accent text-white'
-                    : product.stock === 0
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-foreground text-background hover:bg-accent hover:text-white'
-                }`}
+                className="w-full bg-foreground text-background py-4 px-6 font-semibold rounded-lg hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
-                {added ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {added ? '✓ Added to Cart' : 'Add to Cart'}
               </button>
 
-              {/* Additional Info */}
-              <div className="mt-12 space-y-4 border-t border-border pt-8">
-                <div>
-                  <h3 className="font-semibold mb-2">Product Details</h3>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>Category: <span className="text-foreground capitalize">{product.category}</span></li>
-                    <li>Type: <span className="text-foreground capitalize">{product.subcategory}</span></li>
-                    {product.sizes && <li>Available Sizes: <span className="text-foreground">{product.sizes.join(', ')}</span></li>}
-                  </ul>
+              {/* Wishlist Button */}
+              <button className="w-full border border-foreground text-foreground py-3 px-6 font-semibold rounded-lg hover:bg-secondary transition-colors">
+                Add to Wishlist
+              </button>
+
+              {/* Product Info */}
+              <div className="mt-12 pt-8 border-t border-border">
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Category</p>
+                    <p className="font-semibold text-foreground capitalize">{product.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Type</p>
+                    <p className="font-semibold text-foreground capitalize">{product.subcategory}</p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -3,29 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuthContext } from '@/components/AuthProvider'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { getOrders, getProducts, initializeStorage } from '@/lib/storage'
 import { Order, Product } from '@/lib/types'
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
   const router = useRouter()
+  const { user, logout, isLoading } = useAuthContext()
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
 
   useEffect(() => {
-    const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('admin_logged_in')
-    if (!isLoggedIn) {
-      router.push('/admin')
-      return
+    if (!isLoading && user?.role === 'admin') {
+      initializeStorage()
+      setOrders(getOrders())
+      setProducts(getProducts())
     }
-
-    initializeStorage()
-    setOrders(getOrders())
-    setProducts(getProducts())
-  }, [router])
+  }, [user, isLoading])
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_logged_in')
-    router.push('/admin')
+    logout()
+    router.push('/auth/login')
   }
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
@@ -34,7 +33,8 @@ export default function AdminDashboard() {
   const clothesCount = products.filter(p => p.category === 'clothes').length
 
   return (
-    <div className="min-h-screen bg-background">
+    <ProtectedRoute requiredRole="admin">
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -181,5 +181,6 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

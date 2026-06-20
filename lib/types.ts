@@ -52,7 +52,17 @@ export interface OrderItem {
   variant?: string
 }
 
-export interface AdminUser {
-  username: string
-  password: string
+export type UserRole = 'user' | 'admin'
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  createdAt: string
+}
+
+export interface AuthSession {
+  user: User
+  token: string
 }
