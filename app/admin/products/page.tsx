@@ -4,15 +4,19 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useAuthContext } from '@/components/AuthProvider'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { getProducts, deleteProduct, saveProduct, initializeStorage } from '@/lib/storage'
-import { Product, Category, ProductSubcategory } from '@/lib/types'
+import { Product } from '@/lib/types'
+import { X, Plus, Edit2, Trash2, LogOut } from 'lucide-react'
 
-export default function AdminProducts() {
+export default function AdminProductsPage() {
   const router = useRouter()
+  const { user, logout } = useAuthContext()
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [filterCategory, setFilterCategory] = useState<Category | 'all'>('all')
+  const [filterCategory, setFilterCategory] = useState<string>('all')
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     price: 0,
@@ -22,17 +26,14 @@ export default function AdminProducts() {
     image: '',
     stock: 0,
   })
+  const [imagePreview, setImagePreview] = useState<string>('')
 
   useEffect(() => {
-    const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('admin_logged_in')
-    if (!isLoggedIn) {
-      router.push('/admin')
-      return
+    if (user?.role === 'admin') {
+      initializeStorage()
+      setProducts(getProducts())
     }
-
-    initializeStorage()
-    setProducts(getProducts())
-  }, [router])
+  }, [user])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -40,6 +41,18 @@ export default function AdminProducts() {
       ...prev,
       [name]: type === 'number' ? +value : value,
     }))
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+        setFormData(prev => ({ ...prev, image: reader.result as string }))
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,8 +67,8 @@ export default function AdminProducts() {
       id: editingId || `prod-${Date.now()}`,
       name: formData.name,
       price: formData.price,
-      category: formData.category as Category,
-      subcategory: formData.subcategory as ProductSubcategory,
+      category: formData.category as 'jewellery' | 'clothes',
+      subcategory: formData.subcategory as string,
       description: formData.description || '',
       image: formData.image,
       stock: formData.stock || 0,
@@ -77,12 +90,14 @@ export default function AdminProducts() {
       image: '',
       stock: 0,
     })
+    setImagePreview('')
     setEditingId(null)
     setShowForm(false)
   }
 
   const handleEdit = (product: Product) => {
     setFormData(product)
+    setImagePreview(product.image)
     setEditingId(product.id)
     setShowForm(true)
   }
@@ -96,266 +111,321 @@ export default function AdminProducts() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_logged_in')
-    router.push('/admin')
+    logout()
+    router.push('/auth/login')
   }
 
-  const filteredProducts = filterCategory === 'all'
-    ? products
+  const filteredProducts = filterCategory === 'all' 
+    ? products 
     : products.filter(p => p.category === filterCategory)
 
-  const subcategories: Record<Category, ProductSubcategory[]> = {
-    jewellery: ['rings', 'necklaces', 'earrings', 'bracelets'],
-    clothes: ['tops', 'bottoms', 'dresses', 'accessories'],
-  }
+  const jewelryCount = products.filter(p => p.category === 'jewellery').length
+  const clothesCount = products.filter(p => p.category === 'clothes').length
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 className="font-heading text-2xl font-bold">LUXE Admin Panel</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium border border-border hover:bg-secondary transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="border-b border-border bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8">
-          <Link
-            href="/admin/dashboard"
-            className="py-4 px-4 border-b-2 border-transparent font-medium text-sm hover:border-foreground"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin/products"
-            className="py-4 px-4 border-b-2 border-foreground font-medium text-sm"
-          >
-            Products
-          </Link>
-          <Link
-            href="/admin/orders"
-            className="py-4 px-4 border-b-2 border-transparent font-medium text-sm hover:border-foreground"
-          >
-            Orders
-          </Link>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-heading text-3xl font-bold">Products</h2>
-          <button
-            onClick={() => {
-              resetForm()
-              setShowForm(!showForm)
-            }}
-            className="bg-foreground text-background px-6 py-2 font-medium hover:bg-accent hover:text-white transition-colors"
-          >
-            {showForm ? 'Cancel' : 'Add Product'}
-          </button>
-        </div>
-
-        {/* Form */}
-        {showForm && (
-          <div className="border border-border p-8 mb-8 bg-secondary/30">
-            <h3 className="font-semibold text-lg mb-6">{editingId ? 'Edit Product' : 'Add New Product'}</h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium mb-2">Product Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name || ''}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Diamond Ring"
-                  required
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Price *</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price || 0}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  required
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Category *</label>
-                <select
-                  name="category"
-                  value={formData.category || 'jewellery'}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                >
-                  <option value="jewellery">Jewellery</option>
-                  <option value="clothes">Clothes</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Subcategory *</label>
-                <select
-                  name="subcategory"
-                  value={formData.subcategory || 'rings'}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                >
-                  {subcategories[formData.category as Category]?.map(sub => (
-                    <option key={sub} value={sub}>{sub.charAt(0).toUpperCase() + sub.slice(1)}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Stock *</label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock || 0}
-                  onChange={handleInputChange}
-                  placeholder="0"
-                  min="0"
-                  required
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Image URL *</label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image || ''}
-                  onChange={handleInputChange}
-                  placeholder="/images/product.png"
-                  required
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description || ''}
-                  onChange={handleInputChange}
-                  placeholder="Product description..."
-                  rows={4}
-                  className="w-full px-4 py-2 border border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div className="md:col-span-2 flex gap-4">
-                <button
-                  type="submit"
-                  className="bg-foreground text-background px-6 py-2 font-medium hover:bg-accent hover:text-white transition-colors"
-                >
-                  {editingId ? 'Update Product' : 'Add Product'}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="border border-border px-6 py-2 font-medium hover:bg-secondary transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Filter */}
-        <div className="mb-6 flex gap-4">
-          <div>
-            <label className="text-sm font-medium mr-2">Filter by Category:</label>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value as Category | 'all')}
-              className="px-4 py-2 border border-border bg-background text-foreground"
+    <ProtectedRoute requiredRole="admin">
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b border-border bg-card sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+              <Link href="/admin/dashboard" className="font-heading text-2xl font-bold mb-1">LUXE Admin</Link>
+              <p className="text-sm text-muted-foreground">Products Management</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-border hover:bg-secondary transition-colors"
             >
-              <option value="all">All Products</option>
-              <option value="jewellery">Jewellery</option>
-              <option value="clothes">Clothes</option>
-            </select>
+              <LogOut size={16} />
+              Logout
+            </button>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {filteredProducts.length} products
-          </div>
-        </div>
+        </header>
 
-        {/* Products Table */}
-        {filteredProducts.length === 0 ? (
-          <div className="border border-border p-6 text-center text-muted-foreground">
-            <p>No products found</p>
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="border border-border p-6">
+              <p className="text-sm text-muted-foreground mb-1">Total Products</p>
+              <p className="font-heading text-3xl font-bold">{products.length}</p>
+            </div>
+            <div className="border border-border p-6">
+              <p className="text-sm text-muted-foreground mb-1">Jewellery</p>
+              <p className="font-heading text-3xl font-bold">{jewelryCount}</p>
+            </div>
+            <div className="border border-border p-6">
+              <p className="text-sm text-muted-foreground mb-1">Clothes</p>
+              <p className="font-heading text-3xl font-bold">{clothesCount}</p>
+            </div>
           </div>
-        ) : (
-          <div className="border border-border overflow-hidden">
+
+          {/* Toolbar */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterCategory('all')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  filterCategory === 'all'
+                    ? 'bg-foreground text-background'
+                    : 'border border-border hover:bg-secondary'
+                }`}
+              >
+                All Products
+              </button>
+              <button
+                onClick={() => setFilterCategory('jewellery')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  filterCategory === 'jewellery'
+                    ? 'bg-foreground text-background'
+                    : 'border border-border hover:bg-secondary'
+                }`}
+              >
+                Jewellery
+              </button>
+              <button
+                onClick={() => setFilterCategory('clothes')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  filterCategory === 'clothes'
+                    ? 'bg-foreground text-background'
+                    : 'border border-border hover:bg-secondary'
+                }`}
+              >
+                Clothes
+              </button>
+            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 bg-foreground text-background px-6 py-2 font-semibold hover:bg-accent transition-colors"
+            >
+              <Plus size={18} />
+              Add Product
+            </button>
+          </div>
+
+          {/* Add/Edit Form Modal */}
+          {showForm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 flex justify-between items-center p-6 border-b border-border bg-card">
+                  <h2 className="font-heading text-2xl font-bold">
+                    {editingId ? 'Edit Product' : 'Add New Product'}
+                  </h2>
+                  <button
+                    onClick={resetForm}
+                    className="p-2 hover:bg-secondary transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Name */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Product Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name || ''}
+                        onChange={handleInputChange}
+                        placeholder="Enter product name"
+                        className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                      />
+                    </div>
+
+                    {/* Price */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Price *</label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={formData.price || 0}
+                        onChange={handleInputChange}
+                        placeholder="0.00"
+                        step="0.01"
+                        className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                      />
+                    </div>
+
+                    {/* Category */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Category *</label>
+                      <select
+                        name="category"
+                        value={formData.category || 'jewellery'}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                      >
+                        <option value="jewellery">Jewellery</option>
+                        <option value="clothes">Clothes</option>
+                      </select>
+                    </div>
+
+                    {/* Subcategory */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Subcategory *</label>
+                      <select
+                        name="subcategory"
+                        value={formData.subcategory || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                      >
+                        {formData.category === 'jewellery' ? (
+                          <>
+                            <option value="rings">Rings</option>
+                            <option value="necklaces">Necklaces</option>
+                            <option value="earrings">Earrings</option>
+                            <option value="bracelets">Bracelets</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="tops">Tops</option>
+                            <option value="bottoms">Bottoms</option>
+                            <option value="dresses">Dresses</option>
+                            <option value="accessories">Accessories</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+
+                    {/* Stock */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Stock</label>
+                      <input
+                        type="number"
+                        name="stock"
+                        value={formData.stock || 0}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <textarea
+                      name="description"
+                      value={formData.description || ''}
+                      onChange={handleInputChange}
+                      placeholder="Product description"
+                      rows={4}
+                      className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                    />
+                  </div>
+
+                  {/* Image */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Product Image *</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full px-4 py-2 border border-border bg-background focus:outline-none focus:border-foreground"
+                    />
+                    {imagePreview && (
+                      <div className="mt-4">
+                        <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                        <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-foreground text-background py-3 font-semibold hover:bg-accent transition-colors"
+                    >
+                      {editingId ? 'Update Product' : 'Add Product'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="flex-1 border border-border py-3 font-semibold hover:bg-secondary transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Products Table */}
+          <div className="border border-border overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-secondary/50 border-b border-border">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Image</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Name</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Category</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Price</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Stock</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
+              <thead>
+                <tr className="border-b border-border bg-secondary/50">
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Image</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Category</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Price</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Stock</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {filteredProducts.map(product => (
-                  <tr key={product.id} className="hover:bg-secondary/30">
+              <tbody>
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="relative w-12 h-12 bg-secondary/30">
-                        <Image
+                      <div className="w-16 h-16 bg-secondary/30 overflow-hidden">
+                        <img
                           src={product.image}
                           alt={product.name}
-                          fill
-                          className="object-cover"
+                          className="w-full h-full object-cover"
                         />
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium">{product.name}</td>
-                    <td className="px-6 py-4 text-sm capitalize">{product.subcategory}</td>
-                    <td className="px-6 py-4 text-sm font-semibold">${product.price}</td>
-                    <td className="px-6 py-4 text-sm">{product.stock}</td>
-                    <td className="px-6 py-4 text-sm space-x-2">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-accent hover:text-foreground transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                      >
-                        Delete
-                      </button>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.subcategory}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm capitalize">{product.category}</td>
+                    <td className="px-6 py-4 font-semibold">${product.price}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 text-xs rounded ${
+                        product.stock > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="p-2 hover:bg-secondary transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="p-2 hover:bg-red-100 text-red-600 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {filteredProducts.length === 0 && (
+              <div className="px-6 py-12 text-center">
+                <p className="text-muted-foreground">No products found in this category</p>
+              </div>
+            )}
           </div>
-        )}
-      </main>
-    </div>
+        </main>
+      </div>
+    </ProtectedRoute>
   )
 }
