@@ -7,6 +7,8 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
+import { useCart } from '@/context/CartContext'
+import { ShoppingBag, Check } from 'lucide-react'
 
 interface Product {
   id: string
@@ -24,6 +26,7 @@ interface Product {
 export default function ProductDetail() {
   const params = useParams()
   const router = useRouter()
+  const { addToCart } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -52,22 +55,13 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (product) {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-      const existingItem = cart.find((item: any) => item.productId === product.id)
-
-      if (existingItem) {
-        existingItem.quantity += quantity
-      } else {
-        cart.push({
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity,
-        })
-      }
-
-      localStorage.setItem('cart', JSON.stringify(cart))
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity,
+      })
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
     }
@@ -191,9 +185,19 @@ export default function ProductDetail() {
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                className="w-full bg-foreground text-background py-4 px-6 font-semibold rounded-lg hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                className="w-full bg-foreground text-background py-4 px-6 font-semibold rounded-lg hover:bg-accent hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-3 group"
               >
-                {added ? '✓ Added to Cart' : 'Add to Cart'}
+                {added ? (
+                  <>
+                    <Check className="w-5 h-5 animation-pulse" />
+                    <span>Added to Cart!</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5 transition-transform group-hover:scale-110" />
+                    <span>Add to Cart</span>
+                  </>
+                )}
               </button>
 
               {/* Wishlist Button */}

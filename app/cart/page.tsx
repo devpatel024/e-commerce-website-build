@@ -1,71 +1,40 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { getCart, removeFromCart, saveCart, getProductById, initializeStorage } from '@/lib/storage'
-import { CartItem, Product } from '@/lib/types'
+import { useCart } from '@/context/CartContext'
+import { X, Plus, Minus } from 'lucide-react'
 
 export default function CartPage() {
   const router = useRouter()
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [cartProducts, setCartProducts] = useState<Map<string, Product>>(new Map())
+  const { items, removeFromCart, updateQuantity, clearCart } = useCart()
 
-  useEffect(() => {
-    initializeStorage()
-    const items = getCart()
-    setCartItems(items)
-
-    // Load product details
-    const products = new Map<string, Product>()
-    items.forEach(item => {
-      const product = getProductById(item.productId)
-      if (product) {
-        products.set(item.productId, product)
-      }
-    })
-    setCartProducts(products)
-  }, [])
-
-  const handleQuantityChange = (index: number, newQuantity: number) => {
-    if (newQuantity < 1) return
-    const updatedItems = [...cartItems]
-    updatedItems[index].quantity = newQuantity
-    setCartItems(updatedItems)
-    saveCart(updatedItems)
-  }
-
-  const handleRemove = (index: number) => {
-    const item = cartItems[index]
-    removeFromCart(item.productId, item.size, item.variant)
-    const updated = cartItems.filter((_, i) => i !== index)
-    setCartItems(updated)
-  }
-
-  const subtotal = cartItems.reduce((sum, item) => {
-    const product = cartProducts.get(item.productId)
-    return sum + (product?.price || 0) * item.quantity
+  const subtotal = items.reduce((sum, item) => {
+    const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price
+    return sum + price * item.quantity
   }, 0)
 
   const tax = subtotal * 0.1
   const total = subtotal + tax
 
-  if (cartItems.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center px-4">
-          <h1 className="font-heading text-3xl font-bold mb-4">Shopping Cart</h1>
-          <p className="text-muted-foreground mb-8">Your cart is empty</p>
-          <Link
-            href="/products"
-            className="bg-foreground text-background px-6 py-2 font-medium hover:bg-accent hover:text-white transition-colors"
-          >
-            Continue Shopping
-          </Link>
+          <div className="text-center">
+            <h1 className="font-heading text-3xl font-bold mb-4">Shopping Cart</h1>
+            <p className="text-muted-foreground mb-8">Your cart is empty. Let&apos;s find something beautiful for you.</p>
+            <Link
+              href="/products"
+              className="inline-block bg-foreground text-background px-6 py-3 font-semibold rounded-lg hover:bg-accent hover:text-white transition-colors"
+            >
+              Explore Products
+            </Link>
+          </div>
         </main>
         <Footer />
       </div>
@@ -83,53 +52,58 @@ export default function CartPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Cart Items */}
             <div className="lg:col-span-2">
-              <div className="space-y-6 border border-border p-6">
-                {cartItems.map((item, index) => {
-                  const product = cartProducts.get(item.productId)
-                  if (!product) return null
+              <div className="space-y-4 border border-border rounded-lg p-6 bg-card">
+                {items.map((item) => {
+                  const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price
+                  const itemTotal = price * item.quantity
 
                   return (
-                    <div key={index} className="flex gap-6 border-b border-border pb-6 last:border-0">
-                      <div className="relative w-24 h-24 bg-secondary/30 flex-shrink-0">
+                    <div key={item.productId} className="flex gap-4 p-4 bg-background rounded-lg border border-border hover:border-accent/50 transition-colors">
+                      <div className="relative w-24 h-24 bg-secondary/30 flex-shrink-0 rounded-lg overflow-hidden">
                         <Image
-                          src={product.image}
-                          alt={product.name}
+                          src={item.image}
+                          alt={item.name}
                           fill
                           className="object-cover"
                         />
                       </div>
 
                       <div className="flex-1">
-                        <h3 className="font-semibold mb-1">{product.name}</h3>
+                        <Link href={`/product/${item.productId}`}>
+                          <h3 className="font-semibold text-foreground hover:text-accent transition-colors">{item.name}</h3>
+                        </Link>
                         <p className="text-sm text-muted-foreground mb-2">
-                          {product.subcategory}
-                          {item.size && ` • Size: ${item.size}`}
+                          ${price.toFixed(2)} each
                         </p>
-                        <p className="font-semibold">${product.price}</p>
+                        <p className="text-sm text-accent font-medium">
+                          Total: ${itemTotal.toFixed(2)}
+                        </p>
                       </div>
 
-                      <div className="flex flex-col items-end gap-4">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-3">
+                        <div className="flex items-center gap-2 bg-secondary/50 rounded-lg p-1">
                           <button
-                            onClick={() => handleQuantityChange(index, item.quantity - 1)}
-                            className="px-2 py-1 border border-border hover:bg-secondary"
+                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                            className="p-1 hover:bg-secondary transition-colors"
+                            aria-label="Decrease quantity"
                           >
-                            −
+                            <Minus className="w-4 h-4" />
                           </button>
-                          <span className="w-8 text-center">{item.quantity}</span>
+                          <span className="w-8 text-center font-semibold">{item.quantity}</span>
                           <button
-                            onClick={() => handleQuantityChange(index, item.quantity + 1)}
-                            className="px-2 py-1 border border-border hover:bg-secondary"
+                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            className="p-1 hover:bg-secondary transition-colors"
+                            aria-label="Increase quantity"
                           >
-                            +
+                            <Plus className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="font-semibold">${product.price * item.quantity}</p>
                         <button
-                          onClick={() => handleRemove(index)}
-                          className="text-sm text-red-600 hover:text-red-800 transition-colors"
+                          onClick={() => removeFromCart(item.productId)}
+                          className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          aria-label="Remove item"
                         >
-                          Remove
+                          <X className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
@@ -140,45 +114,57 @@ export default function CartPage() {
               <div className="mt-6">
                 <Link
                   href="/products"
-                  className="text-accent hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-2 text-accent hover:text-foreground transition-colors font-medium"
                 >
-                  &larr; Continue Shopping
+                  ← Continue Shopping
                 </Link>
               </div>
             </div>
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="border border-border p-6 sticky top-4">
-                <h2 className="font-heading text-xl font-bold mb-6">Order Summary</h2>
+              <div className="border border-border rounded-lg p-6 bg-card sticky top-24 space-y-6">
+                <h2 className="font-heading text-xl font-bold">Order Summary</h2>
 
-                <div className="space-y-4 mb-6">
+                <div className="space-y-3 pb-4 border-b border-border">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
+                    <span className="font-medium">${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (10%)</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span className="font-medium">${(subtotal * 0.1).toFixed(2)}</span>
                   </div>
-                  <div className="border-t border-border pt-4 flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="text-green-600 font-medium">Free</span>
                   </div>
+                </div>
+
+                <div className="flex justify-between font-heading text-lg font-bold">
+                  <span>Total</span>
+                  <span>${(subtotal + subtotal * 0.1).toFixed(2)}</span>
                 </div>
 
                 <button
                   onClick={() => router.push('/checkout')}
-                  className="w-full bg-foreground text-background py-3 font-semibold hover:bg-accent hover:text-white transition-colors mb-3"
+                  className="w-full bg-foreground text-background py-3 px-4 font-semibold rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-lg"
                 >
                   Proceed to Checkout
                 </button>
 
                 <button
                   onClick={() => router.push('/products')}
-                  className="w-full border border-foreground py-3 font-semibold hover:bg-foreground hover:text-background transition-colors"
+                  className="w-full border border-border text-foreground py-3 px-4 font-semibold rounded-lg hover:bg-secondary/50 transition-colors"
                 >
                   Continue Shopping
+                </button>
+
+                <button
+                  onClick={() => clearCart()}
+                  className="w-full border border-red-200 text-red-600 py-2 px-4 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Clear Cart
                 </button>
               </div>
             </div>
