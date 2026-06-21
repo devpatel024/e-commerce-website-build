@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useAuthContext } from './AuthProvider'
 import { useCart } from '@/context/CartContext'
-import { ShoppingBag, LogOut, Menu, X } from 'lucide-react'
+import { ShoppingBag, LogOut, Menu, X, User, Heart } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Header() {
@@ -66,6 +66,15 @@ export default function Header() {
                   {itemCount}
                 </span>
               )}
+            </Link>
+
+            {/* Account Link */}
+            <Link
+              href="/account"
+              className="p-2 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary rounded-lg"
+              title="My Account"
+            >
+              <User className="w-6 h-6" />
             </Link>
 
             {/* Auth Section */}

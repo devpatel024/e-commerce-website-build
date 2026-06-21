@@ -8,6 +8,7 @@ import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
+import { Search, Star } from 'lucide-react'
 
 const subcategories = {
   jewellery: ['rings', 'necklaces', 'earrings', 'bracelets'],
@@ -20,6 +21,7 @@ function ProductsContent({
   minPrice,
   maxPrice,
   sort,
+  search,
   products: allProducts,
 }: {
   category?: string
@@ -27,10 +29,22 @@ function ProductsContent({
   minPrice?: string
   maxPrice?: string
   sort?: string
+  search?: string
   products: Product[]
 }) {
+  const [searchTerm, setSearchTerm] = useState(search || '')
 
   let filtered = allProducts
+
+  // Filter by search term
+  if (searchTerm) {
+    filtered = filtered.filter(
+      p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.subcategory.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }
 
   // Filter by category
   if (category && category !== 'all') {
@@ -53,7 +67,11 @@ function ProductsContent({
   } else if (sort === 'price-high') {
     filtered.sort((a, b) => parseFloat(b.price.toString()) - parseFloat(a.price.toString()))
   } else if (sort === 'newest') {
-    filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+    filtered.sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0))
+  } else if (sort === 'rating') {
+    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+  } else if (sort === 'popular') {
+    filtered.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
   }
 
   const availableSubcategories =
@@ -128,7 +146,8 @@ function ProductsContent({
               defaultValue={sort || 'popular'}
               className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
             >
-              <option value="popular">Popular</option>
+              <option value="popular">Most Popular</option>
+              <option value="rating">Highest Rated</option>
               <option value="newest">Newest</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
@@ -139,8 +158,28 @@ function ProductsContent({
 
       {/* Products Grid */}
       <div className="lg:col-span-3">
-        <div className="mb-4">
+        {/* Search Bar */}
+        <div className="mb-6 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search products..."
+            className="w-full pl-12 pr-4 py-3 border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+          />
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{filtered.length} products found</p>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="text-sm text-accent hover:underline"
+            >
+              Clear search
+            </button>
+          )}
         </div>
 
         {filtered.length === 0 ? (
@@ -167,6 +206,28 @@ function ProductsContent({
                 <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors duration-300 line-clamp-2">
                   {prod.name}
                 </h3>
+
+                {/* Rating */}
+                {prod.rating && (
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < Math.round(prod.rating || 0)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      ({prod.reviewCount || 0})
+                    </span>
+                  </div>
+                )}
+
                 <p className="text-muted-foreground text-sm mb-2">{prod.subcategory}</p>
                 <p className="font-semibold text-foreground">{formatPrice(prod.price)}</p>
               </Link>

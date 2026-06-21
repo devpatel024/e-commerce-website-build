@@ -1,8 +1,12 @@
-import { Product, Order, CartItem } from './types'
+import { Product, Order, CartItem, UserPreferences } from './types'
 
 const PRODUCTS_KEY = 'luxe_products'
 const ORDERS_KEY = 'luxe_orders'
 const CART_KEY = 'luxe_cart'
+const WISHLIST_KEY = 'luxe_wishlist'
+const FAVORITES_KEY = 'luxe_favorites'
+const RECENTLY_VIEWED_KEY = 'luxe_recently_viewed'
+const USER_PREFS_KEY = 'luxe_user_prefs'
 
 // Initialize products in localStorage/memory
 export function initializeStorage() {
@@ -118,6 +122,85 @@ export function removeFromCart(productId: string, size?: string, variant?: strin
 export function clearCart(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(CART_KEY)
+  }
+}
+
+// Wishlist operations
+export function getWishlist(): string[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(WISHLIST_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function addToWishlist(productId: string): void {
+  if (typeof window !== 'undefined') {
+    const wishlist = getWishlist()
+    if (!wishlist.includes(productId)) {
+      wishlist.push(productId)
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist))
+    }
+  }
+}
+
+export function removeFromWishlist(productId: string): void {
+  if (typeof window !== 'undefined') {
+    const wishlist = getWishlist().filter(id => id !== productId)
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist))
+  }
+}
+
+export function isInWishlist(productId: string): boolean {
+  return getWishlist().includes(productId)
+}
+
+// Favorites operations
+export function getFavorites(): string[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(FAVORITES_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function addToFavorites(productId: string): void {
+  if (typeof window !== 'undefined') {
+    const favorites = getFavorites()
+    if (!favorites.includes(productId)) {
+      favorites.push(productId)
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites))
+    }
+  }
+}
+
+export function removeFromFavorites(productId: string): void {
+  if (typeof window !== 'undefined') {
+    const favorites = getFavorites().filter(id => id !== productId)
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites))
+  }
+}
+
+export function isInFavorites(productId: string): boolean {
+  return getFavorites().includes(productId)
+}
+
+// Recently viewed operations
+export function getRecentlyViewed(): string[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(RECENTLY_VIEWED_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function addToRecentlyViewed(productId: string): void {
+  if (typeof window !== 'undefined') {
+    let viewed = getRecentlyViewed()
+    viewed = viewed.filter(id => id !== productId)
+    viewed.unshift(productId)
+    viewed = viewed.slice(0, 20) // Keep last 20
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(viewed))
   }
 }
 
@@ -473,5 +556,462 @@ export const SAMPLE_PRODUCTS: Product[] = [
     description: 'Soft cashmere shawl. Luxury wrapped around you.',
     image: '/images/accessory-4.png',
     stock: 11,
+  },
+
+  // Additional Jewellery - Premium Rings
+  {
+    id: 'ring-005',
+    name: 'Platinum Diamond Ring',
+    price: 5200,
+    originalPrice: 6500,
+    category: 'jewellery',
+    subcategory: 'rings',
+    description: 'Exquisite platinum band with brilliant-cut diamonds. Heirloom quality.',
+    image: '/images/ring-5.png',
+    stock: 2,
+    sizes: ['6', '7', '8', '9', '10'],
+    badge: 'exclusive',
+    rating: 4.9,
+    reviewCount: 28,
+  },
+  {
+    id: 'ring-006',
+    name: 'Vintage Opal Ring',
+    price: 1450,
+    category: 'jewellery',
+    subcategory: 'rings',
+    description: 'Stunning vintage-inspired opal with intricate filigree detailing.',
+    image: '/images/ring-6.png',
+    stock: 3,
+    sizes: ['6', '7', '8', '9', '10'],
+    badge: 'trending',
+    rating: 4.7,
+    reviewCount: 15,
+  },
+  {
+    id: 'ring-007',
+    name: 'Modern Geometric Ring',
+    price: 780,
+    category: 'jewellery',
+    subcategory: 'rings',
+    description: 'Contemporary geometric design in 14K rose gold.',
+    image: '/images/ring-7.png',
+    stock: 8,
+    sizes: ['6', '7', '8', '9', '10'],
+    badge: 'new',
+    rating: 4.6,
+    reviewCount: 12,
+  },
+  {
+    id: 'ring-008',
+    name: 'Aquamarine Solitaire',
+    price: 2300,
+    originalPrice: 3100,
+    category: 'jewellery',
+    subcategory: 'rings',
+    description: 'Beautiful aquamarine gemstone with diamond side stones.',
+    image: '/images/ring-8.png',
+    stock: 4,
+    sizes: ['6', '7', '8', '9', '10'],
+    badge: 'sale',
+    rating: 4.8,
+    reviewCount: 22,
+  },
+
+  // Additional Jewellery - Premium Necklaces
+  {
+    id: 'necklace-005',
+    name: 'Moonstone Pendant',
+    price: 1150,
+    category: 'jewellery',
+    subcategory: 'necklaces',
+    description: 'Enchanting moonstone pendant with ethereal glow.',
+    image: '/images/necklace-5.png',
+    stock: 6,
+    badge: 'trending',
+    rating: 4.8,
+    reviewCount: 35,
+  },
+  {
+    id: 'necklace-006',
+    name: 'Rose Gold Chain',
+    price: 920,
+    originalPrice: 1200,
+    category: 'jewellery',
+    subcategory: 'necklaces',
+    description: 'Delicate rose gold chain with unique link design.',
+    image: '/images/necklace-6.png',
+    stock: 11,
+    badge: 'sale',
+    rating: 4.7,
+    reviewCount: 18,
+  },
+  {
+    id: 'necklace-007',
+    name: 'Turquoise Boho Necklace',
+    price: 580,
+    category: 'jewellery',
+    subcategory: 'necklaces',
+    description: 'Bohemian style with turquoise stones and brass accents.',
+    image: '/images/necklace-7.png',
+    stock: 14,
+    badge: 'new',
+    rating: 4.5,
+    reviewCount: 8,
+  },
+  {
+    id: 'necklace-008',
+    name: 'Gold Locket Necklace',
+    price: 1800,
+    category: 'jewellery',
+    subcategory: 'necklaces',
+    description: 'Vintage-inspired locket in 18K gold. Perfect for keepsakes.',
+    image: '/images/necklace-8.png',
+    stock: 5,
+    badge: 'exclusive',
+    rating: 4.9,
+    reviewCount: 42,
+  },
+
+  // Additional Jewellery - Premium Earrings
+  {
+    id: 'earring-005',
+    name: 'Rose Gold Huggie Hoops',
+    price: 720,
+    category: 'jewellery',
+    subcategory: 'earrings',
+    description: 'Modern hugging hoops in rose gold with diamond accents.',
+    image: '/images/earring-5.png',
+    stock: 13,
+    badge: 'new',
+    rating: 4.6,
+    reviewCount: 9,
+  },
+  {
+    id: 'earring-006',
+    name: 'Chandelier Earrings',
+    price: 980,
+    originalPrice: 1300,
+    category: 'jewellery',
+    subcategory: 'earrings',
+    description: 'Glamorous chandelier drops perfect for evening wear.',
+    image: '/images/earring-6.png',
+    stock: 7,
+    badge: 'sale',
+    rating: 4.8,
+    reviewCount: 24,
+  },
+  {
+    id: 'earring-007',
+    name: 'Amethyst Geode Earrings',
+    price: 650,
+    category: 'jewellery',
+    subcategory: 'earrings',
+    description: 'Natural amethyst geode slices in minimalist gold settings.',
+    image: '/images/earring-7.png',
+    stock: 10,
+    badge: 'trending',
+    rating: 4.7,
+    reviewCount: 19,
+  },
+  {
+    id: 'earring-008',
+    name: 'Baroque Pearl Earrings',
+    price: 1200,
+    category: 'jewellery',
+    subcategory: 'earrings',
+    description: 'Unique baroque pearls with contemporary mounting.',
+    image: '/images/earring-8.png',
+    stock: 5,
+    badge: 'exclusive',
+    rating: 4.9,
+    reviewCount: 31,
+  },
+
+  // Additional Jewellery - Premium Bracelets
+  {
+    id: 'bracelet-005',
+    name: 'Sapphire Link Bracelet',
+    price: 2800,
+    originalPrice: 3600,
+    category: 'jewellery',
+    subcategory: 'bracelets',
+    description: 'Stunning sapphire stones linked with white gold.',
+    image: '/images/bracelet-5.png',
+    stock: 2,
+    badge: 'sale',
+    rating: 4.9,
+    reviewCount: 28,
+  },
+  {
+    id: 'bracelet-006',
+    name: 'Turquoise Bead Bracelet',
+    price: 420,
+    category: 'jewellery',
+    subcategory: 'bracelets',
+    description: 'Vibrant turquoise beads with adjustable string.',
+    image: '/images/bracelet-6.png',
+    stock: 20,
+    badge: 'new',
+    rating: 4.5,
+    reviewCount: 11,
+  },
+  {
+    id: 'bracelet-007',
+    name: 'Rose Gold Bangle Set',
+    price: 890,
+    category: 'jewellery',
+    subcategory: 'bracelets',
+    description: 'Set of three rose gold bangles with textured finishes.',
+    image: '/images/bracelet-7.png',
+    stock: 9,
+    badge: 'trending',
+    rating: 4.7,
+    reviewCount: 16,
+  },
+  {
+    id: 'bracelet-008',
+    name: 'Diamond Charm Bracelet',
+    price: 4200,
+    category: 'jewellery',
+    subcategory: 'bracelets',
+    description: 'Luxury charm bracelet with diamond accents and interchangeable charms.',
+    image: '/images/bracelet-8.png',
+    stock: 1,
+    badge: 'exclusive',
+    rating: 5.0,
+    reviewCount: 33,
+  },
+
+  // Additional Clothes - Premium Tops
+  {
+    id: 'top-005',
+    name: 'Silk Blend Blouse',
+    price: 450,
+    originalPrice: 580,
+    category: 'clothes',
+    subcategory: 'tops',
+    description: 'Premium silk blend with luxurious drape and subtle sheen.',
+    image: '/images/top-5.png',
+    stock: 14,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'sale',
+    rating: 4.7,
+    reviewCount: 21,
+  },
+  {
+    id: 'top-006',
+    name: 'Linen Summer Top',
+    price: 180,
+    category: 'clothes',
+    subcategory: 'tops',
+    description: 'Breathable linen perfect for warm weather.',
+    image: '/images/top-6.png',
+    stock: 28,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'new',
+    rating: 4.4,
+    reviewCount: 7,
+  },
+  {
+    id: 'top-007',
+    name: 'Merino Wool Sweater',
+    price: 380,
+    category: 'clothes',
+    subcategory: 'tops',
+    description: 'Fine merino wool sweater that breathes and regulates temperature.',
+    image: '/images/top-7.png',
+    stock: 11,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'trending',
+    rating: 4.8,
+    reviewCount: 26,
+  },
+  {
+    id: 'top-008',
+    name: 'Silk Wrap Top',
+    price: 520,
+    category: 'clothes',
+    subcategory: 'tops',
+    description: 'Versatile wrap top in pure silk with adjustable fit.',
+    image: '/images/top-8.png',
+    stock: 9,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'exclusive',
+    rating: 4.9,
+    reviewCount: 34,
+  },
+
+  // Additional Clothes - Premium Bottoms
+  {
+    id: 'bottom-005',
+    name: 'Wide-Leg Trousers',
+    price: 420,
+    originalPrice: 560,
+    category: 'clothes',
+    subcategory: 'bottoms',
+    description: 'Contemporary wide-leg trousers in Italian wool.',
+    image: '/images/bottom-5.png',
+    stock: 12,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'sale',
+    rating: 4.6,
+    reviewCount: 18,
+  },
+  {
+    id: 'bottom-006',
+    name: 'Leather Leggings',
+    price: 580,
+    category: 'clothes',
+    subcategory: 'bottoms',
+    description: 'Soft vegan leather leggings for a modern look.',
+    image: '/images/bottom-6.png',
+    stock: 8,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'trending',
+    rating: 4.7,
+    reviewCount: 23,
+  },
+  {
+    id: 'bottom-007',
+    name: 'Cotton Blend Shorts',
+    price: 240,
+    category: 'clothes',
+    subcategory: 'bottoms',
+    description: 'Comfortable and stylish cotton blend shorts.',
+    image: '/images/bottom-7.png',
+    stock: 26,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'new',
+    rating: 4.3,
+    reviewCount: 5,
+  },
+  {
+    id: 'bottom-008',
+    name: 'Silk Pajama Pants',
+    price: 350,
+    category: 'clothes',
+    subcategory: 'bottoms',
+    description: 'Luxurious silk pajama pants for ultimate comfort.',
+    image: '/images/bottom-8.png',
+    stock: 15,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'exclusive',
+    rating: 4.8,
+    reviewCount: 29,
+  },
+
+  // Additional Clothes - Premium Dresses
+  {
+    id: 'dress-005',
+    name: 'Cocktail Shift Dress',
+    price: 750,
+    originalPrice: 950,
+    category: 'clothes',
+    subcategory: 'dresses',
+    description: 'Elegant shift dress perfect for cocktail events.',
+    image: '/images/dress-5.png',
+    stock: 6,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'sale',
+    rating: 4.7,
+    reviewCount: 20,
+  },
+  {
+    id: 'dress-006',
+    name: 'Maxi Beach Dress',
+    price: 380,
+    category: 'clothes',
+    subcategory: 'dresses',
+    description: 'Flowy maxi dress perfect for beach vacation.',
+    image: '/images/dress-6.png',
+    stock: 18,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'new',
+    rating: 4.5,
+    reviewCount: 10,
+  },
+  {
+    id: 'dress-007',
+    name: 'Silk Slip Dress',
+    price: 620,
+    category: 'clothes',
+    subcategory: 'dresses',
+    description: 'Minimalist silk slip dress, versatile and elegant.',
+    image: '/images/dress-7.png',
+    stock: 11,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'trending',
+    rating: 4.8,
+    reviewCount: 27,
+  },
+  {
+    id: 'dress-008',
+    name: 'Embroidered Ball Gown',
+    price: 1850,
+    category: 'clothes',
+    subcategory: 'dresses',
+    description: 'Stunning embroidered ball gown for special occasions.',
+    image: '/images/dress-8.png',
+    stock: 2,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    badge: 'exclusive',
+    rating: 5.0,
+    reviewCount: 38,
+  },
+
+  // Additional Accessories
+  {
+    id: 'accessory-005',
+    name: 'Wool Hat',
+    price: 160,
+    category: 'clothes',
+    subcategory: 'accessories',
+    description: 'Premium wool hat in classic styles.',
+    image: '/images/accessory-5.png',
+    stock: 22,
+    badge: 'new',
+    rating: 4.4,
+    reviewCount: 8,
+  },
+  {
+    id: 'accessory-006',
+    name: 'Leather Gloves',
+    price: 280,
+    originalPrice: 380,
+    category: 'clothes',
+    subcategory: 'accessories',
+    description: 'Soft lambskin leather gloves for warmth and style.',
+    image: '/images/accessory-6.png',
+    stock: 16,
+    badge: 'sale',
+    rating: 4.6,
+    reviewCount: 14,
+  },
+  {
+    id: 'accessory-007',
+    name: 'Silk Hair Scarf',
+    price: 220,
+    category: 'clothes',
+    subcategory: 'accessories',
+    description: 'Pure silk hair scarf for protection and elegance.',
+    image: '/images/accessory-7.png',
+    stock: 20,
+    badge: 'trending',
+    rating: 4.7,
+    reviewCount: 17,
+  },
+  {
+    id: 'accessory-008',
+    name: 'Premium Pashmina',
+    price: 890,
+    category: 'clothes',
+    subcategory: 'accessories',
+    description: 'Luxurious pashmina wrap in rich colors.',
+    image: '/images/accessory-8.png',
+    stock: 8,
+    badge: 'exclusive',
+    rating: 4.9,
+    reviewCount: 32,
   },
 ]
