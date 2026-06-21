@@ -7,6 +7,8 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
+import { formatPrice } from '@/lib/price-formatter'
+import { Search, Star } from 'lucide-react'
 
 const subcategories = {
   jewellery: ['rings', 'necklaces', 'earrings', 'bracelets'],
@@ -19,6 +21,7 @@ function ProductsContent({
   minPrice,
   maxPrice,
   sort,
+  search,
   products: allProducts,
 }: {
   category?: string
@@ -26,10 +29,22 @@ function ProductsContent({
   minPrice?: string
   maxPrice?: string
   sort?: string
+  search?: string
   products: Product[]
 }) {
+  const [searchTerm, setSearchTerm] = useState(search || '')
 
   let filtered = allProducts
+
+  // Filter by search term
+  if (searchTerm) {
+    filtered = filtered.filter(
+      p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.subcategory.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }
 
   // Filter by category
   if (category && category !== 'all') {
@@ -52,7 +67,11 @@ function ProductsContent({
   } else if (sort === 'price-high') {
     filtered.sort((a, b) => parseFloat(b.price.toString()) - parseFloat(a.price.toString()))
   } else if (sort === 'newest') {
-    filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+    filtered.sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0))
+  } else if (sort === 'rating') {
+    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+  } else if (sort === 'popular') {
+    filtered.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
   }
 
   const availableSubcategories =
@@ -62,8 +81,13 @@ function ProductsContent({
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
       {/* Filters Sidebar */}
       <div className="lg:col-span-1">
-        <div className="bg-card rounded-lg shadow p-6 border border-border">
-          <h3 className="font-heading text-lg font-semibold mb-4">Filters</h3>
+        <div className="bg-card rounded-lg shadow p-6 border border-border sticky top-24 animate-fade-in">
+          <h3 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+          </h3>
 
           {/* Category Filter */}
           <div className="mb-6 pb-6 border-b border-border">
@@ -122,7 +146,8 @@ function ProductsContent({
               defaultValue={sort || 'popular'}
               className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
             >
-              <option value="popular">Popular</option>
+              <option value="popular">Most Popular</option>
+              <option value="rating">Highest Rated</option>
               <option value="newest">Newest</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
@@ -133,8 +158,28 @@ function ProductsContent({
 
       {/* Products Grid */}
       <div className="lg:col-span-3">
-        <div className="mb-4">
+        {/* Search Bar */}
+        <div className="mb-6 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search products..."
+            className="w-full pl-12 pr-4 py-3 border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+          />
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{filtered.length} products found</p>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="text-sm text-accent hover:underline"
+            >
+              Clear search
+            </button>
+          )}
         </div>
 
         {filtered.length === 0 ? (
@@ -143,14 +188,14 @@ function ProductsContent({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map(prod => (
+            {filtered.map((prod, idx) => (
               <Link key={prod.id} href={`/product/${prod.id}`} className="group">
-                <div className="relative h-80 bg-secondary/30 overflow-hidden rounded-lg mb-4">
+                <div className={`relative h-80 bg-secondary/30 overflow-hidden rounded-lg mb-4 animate-fade-in delay-${idx * 100}`}>
                   <Image
                     src={prod.image}
                     alt={prod.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   {prod.stock === 0 && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -158,11 +203,33 @@ function ProductsContent({
                     </div>
                   )}
                 </div>
-                <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors line-clamp-2">
+                <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors duration-300 line-clamp-2">
                   {prod.name}
                 </h3>
+
+                {/* Rating */}
+                {prod.rating && (
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < Math.round(prod.rating || 0)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      ({prod.reviewCount || 0})
+                    </span>
+                  </div>
+                )}
+
                 <p className="text-muted-foreground text-sm mb-2">{prod.subcategory}</p>
-                <p className="font-semibold text-foreground">${parseFloat(prod.price.toString()).toFixed(2)}</p>
+                <p className="font-semibold text-foreground">{formatPrice(prod.price)}</p>
               </Link>
             ))}
           </div>

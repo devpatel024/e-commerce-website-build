@@ -5,8 +5,17 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import HeroCarousel from '@/components/HeroCarousel'
+import ProductShowcase from '@/components/ProductShowcase'
+import TestimonialSection from '@/components/TestimonialSection'
+import FAQSection from '@/components/FAQSection'
+import TrustBadges from '@/components/TrustBadges'
+import FeaturedCollections from '@/components/FeaturedCollections'
+import NewsletterSignup from '@/components/NewsletterSignup'
+import PromoBanner from '@/components/PromoBanner'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
+import { formatPrice } from '@/lib/price-formatter'
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
@@ -21,109 +30,68 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <PromoBanner
+        title="Summer Sale"
+        message="Get up to 50% off on selected items. Limited time offer!"
+        ctaText="Shop Now"
+        ctaHref="/products?badge=sale"
+      />
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative w-full h-[500px] bg-secondary/50 flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-secondary/30 to-background opacity-60" />
-          <div className="relative z-10 text-center max-w-2xl px-4">
-            <h1 className="font-heading text-5xl md:text-6xl font-bold mb-4 text-foreground tracking-tight">
-              Timeless Elegance
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Discover our curated collection of premium fashion and jewellery. Where luxury meets sophistication.
-            </p>
-            <Link
-              href="/products"
-              className="inline-block bg-foreground text-background px-8 py-3 font-semibold hover:bg-accent hover:text-white transition-colors"
-            >
-              Explore Collection
-            </Link>
-          </div>
-        </section>
+        {/* Hero Section with Carousel */}
+        <HeroCarousel />
 
-        {/* Featured Jewellery Section */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mb-12">
-            <h2 className="font-heading text-4xl font-bold mb-2">Jewellery</h2>
-            <p className="text-muted-foreground">Elegant pieces crafted with precision and passion</p>
-          </div>
+        {/* New Arrivals Showcase */}
+        <ProductShowcase
+          title="New Arrivals"
+          description="Discover our latest collection with fresh designs and premium materials"
+          products={products.filter(p => p.badge === 'new')}
+          badge="new"
+          showCount={8}
+        />
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {jewelleryProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="group"
-              >
-                <div className="relative h-72 bg-secondary/30 overflow-hidden mb-4">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-3">{product.subcategory}</p>
-                <p className="font-semibold text-foreground">${product.price}</p>
-              </Link>
-            ))}
-          </div>
+        {/* Best Sellers Showcase */}
+        <ProductShowcase
+          title="Best Sellers"
+          description="Customer favorites that consistently deliver excellence"
+          products={products.filter(p => p.badge === 'bestseller' || p.reviewCount! > 20).sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))}
+          badge="bestseller"
+          showCount={8}
+        />
 
-          <div className="mt-8 text-center">
-            <Link
-              href="/products?category=jewellery"
-              className="inline-block border border-foreground text-foreground px-6 py-2 font-medium hover:bg-foreground hover:text-background transition-colors"
-            >
-              View All Jewellery
-            </Link>
-          </div>
-        </section>
+        {/* Flash Deals Section */}
+        <ProductShowcase
+          title="Flash Deals"
+          description="Limited time offers on selected premium items"
+          products={products.filter(p => p.badge === 'sale' || p.originalPrice)}
+          badge="sale"
+          showCount={8}
+        />
 
-        {/* Featured Clothes Section */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 border-t border-border">
-          <div className="mb-12">
-            <h2 className="font-heading text-4xl font-bold mb-2">Clothes</h2>
-            <p className="text-muted-foreground">Premium apparel for the discerning fashionista</p>
-          </div>
+        {/* Trending Section */}
+        <ProductShowcase
+          title="Trending Now"
+          description="The hottest items everyone is talking about"
+          products={products.filter(p => p.badge === 'trending' || p.rating! >= 4.7).sort((a, b) => (b.rating || 0) - (a.rating || 0))}
+          badge="trending"
+          showCount={8}
+        />
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {clothesProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="group"
-              >
-                <div className="relative h-72 bg-secondary/30 overflow-hidden mb-4">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-3">{product.subcategory}</p>
-                <p className="font-semibold text-foreground">${product.price}</p>
-              </Link>
-            ))}
-          </div>
+        {/* Trust Badges */}
+        <TrustBadges />
 
-          <div className="mt-8 text-center">
-            <Link
-              href="/products?category=clothes"
-              className="inline-block border border-foreground text-foreground px-6 py-2 font-medium hover:bg-foreground hover:text-background transition-colors"
-            >
-              View All Clothes
-            </Link>
-          </div>
-        </section>
+        {/* Featured Collections */}
+        <FeaturedCollections />
+
+        {/* Testimonials */}
+        <TestimonialSection />
+
+        {/* FAQ */}
+        <FAQSection />
+
+        {/* Newsletter Signup */}
+        <NewsletterSignup />
       </main>
 
       <Footer />

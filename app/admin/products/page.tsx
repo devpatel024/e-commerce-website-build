@@ -9,6 +9,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { getProducts, deleteProduct, saveProduct, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { X, Plus, Edit2, Trash2, LogOut } from 'lucide-react'
+import { formatPrice } from '@/lib/price-formatter'
 
 export default function AdminProductsPage() {
   const router = useRouter()
@@ -385,7 +386,7 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm capitalize">{product.category}</td>
-                    <td className="px-6 py-4 font-semibold">${product.price}</td>
+                    <td className="px-6 py-4 font-semibold">{formatPrice(product.price)}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 text-xs rounded ${
                         product.stock > 0

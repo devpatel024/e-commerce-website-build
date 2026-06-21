@@ -7,6 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useCart } from '@/context/CartContext'
 import { X, Plus, Minus } from 'lucide-react'
+import { formatPrice } from '@/lib/price-formatter'
 
 export default function CartPage() {
   const router = useRouter()
@@ -73,10 +74,10 @@ export default function CartPage() {
                           <h3 className="font-semibold text-foreground hover:text-accent transition-colors">{item.name}</h3>
                         </Link>
                         <p className="text-sm text-muted-foreground mb-2">
-                          ${price.toFixed(2)} each
+                          {formatPrice(price)} each
                         </p>
                         <p className="text-sm text-accent font-medium">
-                          Total: ${itemTotal.toFixed(2)}
+                          Total: {formatPrice(itemTotal)}
                         </p>
                       </div>
 
@@ -129,11 +130,11 @@ export default function CartPage() {
                 <div className="space-y-3 pb-4 border-b border-border">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                    <span className="font-medium">${subtotal.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (10%)</span>
-                    <span className="font-medium">${(subtotal * 0.1).toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(subtotal * 0.1)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
@@ -143,7 +144,7 @@ export default function CartPage() {
 
                 <div className="flex justify-between font-heading text-lg font-bold">
                   <span>Total</span>
-                  <span>${(subtotal + subtotal * 0.1).toFixed(2)}</span>
+                  <span>{formatPrice(subtotal + subtotal * 0.1)}</span>
                 </div>
 
                 <button
