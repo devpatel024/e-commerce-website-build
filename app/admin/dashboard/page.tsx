@@ -7,18 +7,25 @@ import { useAuthContext } from '@/components/AuthProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { getOrders, getProducts, initializeStorage } from '@/lib/storage'
 import { Order, Product } from '@/lib/types'
+import { formatPrice } from '@/lib/price-formatter'
+import { calculateDashboardStats, DashboardStats } from '@/lib/analytics'
+import { TrendingUp, Package, Users, ShoppingCart } from 'lucide-react'
 
 export default function AdminDashboardPage() {
   const router = useRouter()
   const { user, logout, isLoading } = useAuthContext()
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
 
   useEffect(() => {
     if (!isLoading && user?.role === 'admin') {
       initializeStorage()
-      setOrders(getOrders())
-      setProducts(getProducts())
+      const ordersData = getOrders()
+      const productsData = getProducts()
+      setOrders(ordersData)
+      setProducts(productsData)
+      setStats(calculateDashboardStats(ordersData, productsData))
     }
   }, [user, isLoading])
 
@@ -26,11 +33,6 @@ export default function AdminDashboardPage() {
     logout()
     router.push('/auth/login')
   }
-
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
-  const pendingOrders = orders.filter(o => o.status === 'pending').length
-  const jewelleryCount = products.filter(p => p.category === 'jewellery').length
-  const clothesCount = products.filter(p => p.category === 'clothes').length
 
   return (
     <ProtectedRoute requiredRole="admin">
@@ -79,32 +81,50 @@ export default function AdminDashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
           {/* Total Orders */}
-          <div className="border border-border p-6">
-            <p className="text-muted-foreground text-sm mb-2">Total Orders</p>
-            <p className="font-heading text-4xl font-bold">{orders.length}</p>
-            <p className="text-xs text-muted-foreground mt-2">{pendingOrders} pending</p>
+          <div className="border border-border p-6 hover:border-accent/50 transition-all duration-300 hover:shadow-lg animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm mb-2">Total Orders</p>
+                <p className="font-heading text-3xl font-bold">{stats?.totalOrders || 0}</p>
+                <p className="text-xs text-muted-foreground mt-2">{stats?.pendingOrders} pending</p>
+              </div>
+              <ShoppingCart className="w-8 h-8 text-accent/30" />
+            </div>
           </div>
 
           {/* Total Revenue */}
-          <div className="border border-border p-6">
-            <p className="text-muted-foreground text-sm mb-2">Total Revenue</p>
-            <p className="font-heading text-4xl font-bold">${totalRevenue.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground mt-2">All time</p>
+          <div className="border border-border p-6 hover:border-accent/50 transition-all duration-300 hover:shadow-lg animate-fade-in delay-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm mb-2">Total Revenue</p>
+                <p className="font-heading text-3xl font-bold">{formatPrice(stats?.totalRevenue || 0)}</p>
+                <p className="text-xs text-green-600 mt-2">+{(stats?.totalRevenue || 0).toFixed(0)} from orders</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-600/30" />
+            </div>
           </div>
 
-          {/* Total Products */}
-          <div className="border border-border p-6">
-            <p className="text-muted-foreground text-sm mb-2">Total Products</p>
-            <p className="font-heading text-4xl font-bold">{products.length}</p>
-            <p className="text-xs text-muted-foreground mt-2">Across all categories</p>
+          {/* Average Order Value */}
+          <div className="border border-border p-6 hover:border-accent/50 transition-all duration-300 hover:shadow-lg animate-fade-in delay-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm mb-2">Avg Order Value</p>
+                <p className="font-heading text-3xl font-bold">{formatPrice(stats?.averageOrderValue || 0)}</p>
+                <p className="text-xs text-muted-foreground mt-2">Per transaction</p>
+              </div>
+              <Package className="w-8 h-8 text-blue-600/30" />
+            </div>
           </div>
 
-          {/* Categories */}
-          <div className="border border-border p-6">
-            <p className="text-muted-foreground text-sm mb-2">Categories</p>
-            <div className="space-y-1">
-              <p className="font-semibold">Jewellery: {jewelleryCount}</p>
-              <p className="font-semibold">Clothes: {clothesCount}</p>
+          {/* Total Customers */}
+          <div className="border border-border p-6 hover:border-accent/50 transition-all duration-300 hover:shadow-lg animate-fade-in delay-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm mb-2">Unique Customers</p>
+                <p className="font-heading text-3xl font-bold">{stats?.totalCustomers || 0}</p>
+                <p className="text-xs text-muted-foreground mt-2">Total registered</p>
+              </div>
+              <Users className="w-8 h-8 text-purple-600/30" />
             </div>
           </div>
         </div>
@@ -142,7 +162,7 @@ export default function AdminDashboardPage() {
                     <tr key={order.id} className="hover:bg-secondary/30">
                       <td className="px-6 py-4 text-sm font-medium">{order.id}</td>
                       <td className="px-6 py-4 text-sm">{order.customer.name}</td>
-                      <td className="px-6 py-4 text-sm font-semibold">${order.total.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-sm font-semibold">{formatPrice(order.total)}</td>
                       <td className="px-6 py-4 text-sm">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
                           order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :

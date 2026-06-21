@@ -16,12 +16,12 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between h-20">
+        <nav className="flex items-center justify-between h-20 transition-smooth">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="text-2xl font-bold tracking-wider font-heading">LUXE</div>
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-smooth group">
+            <div className="text-2xl font-bold tracking-wider font-heading group-hover:text-accent transition-colors">LUXE</div>
           </Link>
 
           {/* Desktop Navigation */}

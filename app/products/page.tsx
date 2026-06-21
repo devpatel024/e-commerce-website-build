@@ -7,6 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
+import { formatPrice } from '@/lib/price-formatter'
 
 const subcategories = {
   jewellery: ['rings', 'necklaces', 'earrings', 'bracelets'],
@@ -62,8 +63,13 @@ function ProductsContent({
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
       {/* Filters Sidebar */}
       <div className="lg:col-span-1">
-        <div className="bg-card rounded-lg shadow p-6 border border-border">
-          <h3 className="font-heading text-lg font-semibold mb-4">Filters</h3>
+        <div className="bg-card rounded-lg shadow p-6 border border-border sticky top-24 animate-fade-in">
+          <h3 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+          </h3>
 
           {/* Category Filter */}
           <div className="mb-6 pb-6 border-b border-border">
@@ -143,14 +149,14 @@ function ProductsContent({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map(prod => (
+            {filtered.map((prod, idx) => (
               <Link key={prod.id} href={`/product/${prod.id}`} className="group">
-                <div className="relative h-80 bg-secondary/30 overflow-hidden rounded-lg mb-4">
+                <div className={`relative h-80 bg-secondary/30 overflow-hidden rounded-lg mb-4 animate-fade-in delay-${idx * 100}`}>
                   <Image
                     src={prod.image}
                     alt={prod.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   {prod.stock === 0 && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -158,11 +164,11 @@ function ProductsContent({
                     </div>
                   )}
                 </div>
-                <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors line-clamp-2">
+                <h3 className="font-heading text-lg font-semibold mb-1 group-hover:text-accent transition-colors duration-300 line-clamp-2">
                   {prod.name}
                 </h3>
                 <p className="text-muted-foreground text-sm mb-2">{prod.subcategory}</p>
-                <p className="font-semibold text-foreground">${parseFloat(prod.price.toString()).toFixed(2)}</p>
+                <p className="font-semibold text-foreground">{formatPrice(prod.price)}</p>
               </Link>
             ))}
           </div>

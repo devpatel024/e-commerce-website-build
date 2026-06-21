@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getOrders, updateOrder, initializeStorage } from '@/lib/storage'
 import { Order } from '@/lib/types'
+import { formatPrice } from '@/lib/price-formatter'
 
 export default function AdminOrders() {
   const router = useRouter()
@@ -134,7 +135,7 @@ export default function AdminOrders() {
                     </div>
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Total</p>
-                      <p className="font-semibold">${order.total.toFixed(2)}</p>
+                      <p className="font-semibold">{formatPrice(order.total)}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Status</p>
@@ -159,7 +160,7 @@ export default function AdminOrders() {
                         {order.items.map((item, idx) => (
                           <div key={idx} className="flex justify-between text-sm">
                             <span>{item.productName} x {item.quantity}</span>
-                            <span>${(item.price * item.quantity).toFixed(2)}</span>
+                            <span>{formatPrice(item.price * item.quantity)}</span>
                           </div>
                         ))}
                       </div>

@@ -7,6 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getCart, clearCart, getProductById, saveOrder, initializeStorage } from '@/lib/storage'
 import { CartItem, Order } from '@/lib/types'
+import { formatPrice } from '@/lib/price-formatter'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -271,7 +272,7 @@ export default function CheckoutPage() {
                   disabled={isProcessing}
                   className="w-full bg-foreground text-background py-3 font-semibold hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing ? 'Processing...' : `Place Order - $${total.toFixed(2)}`}
+                  {isProcessing ? 'Processing...' : `Place Order - ${formatPrice(total)}`}
                 </button>
               </form>
             </div>
@@ -291,7 +292,7 @@ export default function CheckoutPage() {
                         <span className="text-muted-foreground">
                           {product.name} x {item.quantity}
                         </span>
-                        <span>${(product.price * item.quantity).toFixed(2)}</span>
+                        <span>{formatPrice(product.price * item.quantity)}</span>
                       </div>
                     )
                   })}
@@ -300,15 +301,15 @@ export default function CheckoutPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>${(total / 1.1).toFixed(2)}</span>
+                    <span>{formatPrice(total / 1.1)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (10%)</span>
-                    <span>${(total - total / 1.1).toFixed(2)}</span>
+                    <span>{formatPrice(total - total / 1.1)}</span>
                   </div>
                   <div className="flex justify-between font-semibold border-t border-border pt-3">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>

@@ -9,6 +9,8 @@ import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { useCart } from '@/context/CartContext'
 import { ShoppingBag, Check } from 'lucide-react'
+import { formatPrice } from '@/lib/price-formatter'
+import ProductReviews from '@/components/ProductReviews'
 
 interface Product {
   id: string
@@ -141,7 +143,7 @@ export default function ProductDetail() {
                   {product.subcategory}
                 </p>
                 <h1 className="font-heading text-4xl font-bold mb-4 text-foreground">{product.name}</h1>
-                <p className="text-3xl font-semibold text-foreground mb-6">${price}</p>
+                <p className="text-3xl font-semibold text-foreground mb-6">{formatPrice(price)}</p>
                 <p className="text-lg text-muted-foreground leading-relaxed">{product.description}</p>
               </div>
 
@@ -185,7 +187,7 @@ export default function ProductDetail() {
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                className="w-full bg-foreground text-background py-4 px-6 font-semibold rounded-lg hover:bg-accent hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-3 group"
+                className="w-full bg-foreground text-background py-4 px-6 font-semibold rounded-lg hover:bg-accent hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-3 group hover:shadow-lg hover:scale-105"
               >
                 {added ? (
                   <>
@@ -220,6 +222,11 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Product Reviews Section */}
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <ProductReviews productId={product.id} />
         </div>
       </main>
 
