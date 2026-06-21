@@ -1,4 +1,13 @@
-import { auth } from '@/lib/auth'
-import { toNextJsHandler } from 'better-auth/next-js'
+export async function GET() {
+  return Response.json({ message: 'Auth API endpoint' })
+}
 
-export const { GET, POST } = toNextJsHandler(auth.handler)
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    // Handle authentication requests here
+    return Response.json({ success: true })
+  } catch (error) {
+    return Response.json({ error: 'Invalid request' }, { status: 400 })
+  }
+}
