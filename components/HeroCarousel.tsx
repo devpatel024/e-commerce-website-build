@@ -103,7 +103,7 @@ export default function HeroCarousel() {
           </p>
           <Link
             href="/products"
-            className="inline-block bg-white text-background px-8 md:px-12 py-3 md:py-4 font-semibold hover:bg-accent hover:text-white transition-all duration-300 transform hover:scale-105"
+            className="inline-block bg-white text-black px-8 md:px-12 py-3 md:py-4 font-semibold hover:bg-accent hover:text-white transition-all duration-300 transform hover:scale-105"
           >
             Shop Collection
           </Link>
