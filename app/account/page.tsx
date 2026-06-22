@@ -12,14 +12,16 @@ import {
   getProductById,
   removeFromWishlist,
   removeFromFavorites,
+  getOrders,
   initializeStorage,
 } from '@/lib/storage'
-import { Product } from '@/lib/types'
+import { Product, Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
-import { Heart, Star, Trash2, ArrowRight } from 'lucide-react'
+import { Heart, Star, Trash2, ArrowRight, ShoppingBag, Eye } from 'lucide-react'
 
 export default function AccountPage() {
-  const [activeTab, setActiveTab] = useState<'wishlist' | 'favorites' | 'recently-viewed'>('wishlist')
+  const [activeTab, setActiveTab] = useState<'orders' | 'wishlist' | 'favorites'>('orders')
+  const [orders, setOrders] = useState<Order[]>([])
   const [wishlistProducts, setWishlistProducts] = useState<Product[]>([])
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([])
   const [allProducts, setAllProducts] = useState<Product[]>([])
@@ -28,6 +30,10 @@ export default function AccountPage() {
     initializeStorage()
     const products = getProducts()
     setAllProducts(products)
+
+    // Load orders
+    const allOrders = getOrders()
+    setOrders(allOrders)
 
     const wishlistIds = getWishlist()
     const wishlistProds = wishlistIds
@@ -151,7 +157,7 @@ export default function AccountPage() {
 
           {/* Tabs */}
           <div className="flex gap-4 mb-8 border-b border-border overflow-x-auto animate-fade-in delay-100">
-            {['wishlist', 'favorites', 'recently-viewed'].map((tab) => (
+            {['orders', 'wishlist', 'favorites'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
@@ -161,15 +167,109 @@ export default function AccountPage() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
+                {tab === 'orders' && 'My Orders'}
                 {tab === 'wishlist' && 'Wishlist'}
                 {tab === 'favorites' && 'Favorites'}
-                {tab === 'recently-viewed' && 'Recently Viewed'}
               </button>
             ))}
           </div>
 
           {/* Content */}
           <div className="animate-fade-in delay-200">
+            {activeTab === 'orders' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-heading text-2xl font-bold">My Orders</h2>
+                  <span className="px-3 py-1 bg-secondary text-foreground rounded-full text-sm font-semibold">
+                    {orders.length} orders
+                  </span>
+                </div>
+
+                {orders.length > 0 ? (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order.id} className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase font-semibold">Order ID</p>
+                            <p className="font-semibold text-lg">{order.id}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                              order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-border">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Date</p>
+                            <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Items</p>
+                            <p className="font-semibold">{order.items.length} items</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Total</p>
+                            <p className="font-semibold">{formatPrice(order.total)}</p>
+                          </div>
+                          {order.paymentStatus && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Payment</p>
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                                order.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                order.paymentStatus === 'pending' ? 'bg-gray-100 text-gray-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3">
+                          <Link
+                            href={`/account/orders/${order.id}`}
+                            className="flex items-center gap-2 bg-foreground text-background px-4 py-2 rounded font-semibold hover:bg-accent transition-colors text-sm"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Details
+                          </Link>
+                          <a
+                            href={`/api/orders/${order.id}/invoice`}
+                            className="flex items-center gap-2 border border-border text-foreground px-4 py-2 rounded font-semibold hover:border-foreground transition-colors text-sm"
+                          >
+                            Download Invoice
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Start shopping to place your first order.
+                    </p>
+                    <Link
+                      href="/products"
+                      className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 font-semibold rounded-lg hover:bg-accent transition-colors"
+                    >
+                      Browse Products
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'wishlist' && (
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -254,13 +354,7 @@ export default function AccountPage() {
               </div>
             )}
 
-            {activeTab === 'recently-viewed' && (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground mb-4">
-                  Recently viewed products will appear here.
-                </p>
-              </div>
-            )}
+
           </div>
         </div>
       </main>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getOrders, updateOrder, initializeStorage } from '@/lib/storage'
 import { Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
+import { Eye } from 'lucide-react'
 
 export default function AdminOrders() {
   const router = useRouter()
@@ -44,6 +45,12 @@ export default function AdminOrders() {
     processing: 'bg-blue-100 text-blue-800',
     shipped: 'bg-purple-100 text-purple-800',
     delivered: 'bg-green-100 text-green-800',
+  }
+
+  const paymentStatusColors: Record<string, string> = {
+    pending: 'bg-gray-100 text-gray-800',
+    completed: 'bg-green-100 text-green-800',
+    failed: 'bg-red-100 text-red-800',
   }
 
   return (
@@ -120,33 +127,52 @@ export default function AdminOrders() {
             {filteredOrders.map(order => (
               <div key={order.id} className="border border-border overflow-hidden">
                 {/* Order Header */}
-                <div
-                  className="bg-secondary/30 p-6 cursor-pointer hover:bg-secondary/50 transition-colors"
-                  onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                >
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-5 items-center">
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground font-semibold">Order ID</p>
-                      <p className="font-semibold">{order.id}</p>
+                <div className="bg-secondary/30 p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div
+                      className="cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                      onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                    >
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-6 items-center">
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground font-semibold">Order ID</p>
+                          <p className="font-semibold text-sm">{order.id}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground font-semibold">Customer</p>
+                          <p className="font-semibold text-sm">{order.customer.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground font-semibold">Total</p>
+                          <p className="font-semibold text-sm">{formatPrice(order.total)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground font-semibold">Status</p>
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${statusColors[order.status]}`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        {order.paymentStatus && (
+                          <div>
+                            <p className="text-xs uppercase text-muted-foreground font-semibold">Payment</p>
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${paymentStatusColors[order.paymentStatus]}`}>
+                              {order.paymentStatus}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground font-semibold">Date</p>
+                          <p className="font-semibold text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground font-semibold">Customer</p>
-                      <p className="font-semibold">{order.customer.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground font-semibold">Total</p>
-                      <p className="font-semibold">{formatPrice(order.total)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground font-semibold">Status</p>
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${statusColors[order.status]}`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground font-semibold">Date</p>
-                      <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
-                    </div>
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="flex items-center gap-2 bg-foreground text-background px-4 py-2 rounded font-semibold hover:bg-accent transition-colors whitespace-nowrap"
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Details
+                    </Link>
                   </div>
                 </div>
 

@@ -1,4 +1,4 @@
-import { Product, Order, CartItem, UserPreferences } from './types'
+import { Product, Order, CartItem, UserPreferences, Coupon, BackInStockAlert, OrderNotification, SalesAnalytics } from './types'
 
 const PRODUCTS_KEY = 'luxe_products'
 const ORDERS_KEY = 'luxe_orders'
@@ -7,6 +7,10 @@ const WISHLIST_KEY = 'luxe_wishlist'
 const FAVORITES_KEY = 'luxe_favorites'
 const RECENTLY_VIEWED_KEY = 'luxe_recently_viewed'
 const USER_PREFS_KEY = 'luxe_user_prefs'
+const COUPONS_KEY = 'luxe_coupons'
+const BACK_IN_STOCK_KEY = 'luxe_back_in_stock'
+const NOTIFICATIONS_KEY = 'luxe_notifications'
+const ANALYTICS_KEY = 'luxe_analytics'
 
 // Initialize products in localStorage/memory
 export function initializeStorage() {
@@ -201,6 +205,103 @@ export function addToRecentlyViewed(productId: string): void {
     viewed.unshift(productId)
     viewed = viewed.slice(0, 20) // Keep last 20
     localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(viewed))
+  }
+}
+
+// Coupon operations
+export function getCoupons(): Coupon[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(COUPONS_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function saveCoupon(coupon: Coupon): void {
+  if (typeof window !== 'undefined') {
+    const coupons = getCoupons()
+    const index = coupons.findIndex(c => c.id === coupon.id)
+    if (index >= 0) {
+      coupons[index] = coupon
+    } else {
+      coupons.push(coupon)
+    }
+    localStorage.setItem(COUPONS_KEY, JSON.stringify(coupons))
+  }
+}
+
+export function deleteCoupon(id: string): void {
+  if (typeof window !== 'undefined') {
+    const coupons = getCoupons().filter(c => c.id !== id)
+    localStorage.setItem(COUPONS_KEY, JSON.stringify(coupons))
+  }
+}
+
+export function getCouponByCode(code: string): Coupon | undefined {
+  const coupons = getCoupons()
+  return coupons.find(c => c.code.toUpperCase() === code.toUpperCase() && c.isActive)
+}
+
+// Back-in-stock alert operations
+export function getBackInStockAlerts(): BackInStockAlert[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(BACK_IN_STOCK_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function addBackInStockAlert(alert: BackInStockAlert): void {
+  if (typeof window !== 'undefined') {
+    const alerts = getBackInStockAlerts()
+    alerts.push(alert)
+    localStorage.setItem(BACK_IN_STOCK_KEY, JSON.stringify(alerts))
+  }
+}
+
+export function removeBackInStockAlert(id: string): void {
+  if (typeof window !== 'undefined') {
+    const alerts = getBackInStockAlerts().filter(a => a.id !== id)
+    localStorage.setItem(BACK_IN_STOCK_KEY, JSON.stringify(alerts))
+  }
+}
+
+// Order notification operations
+export function getNotifications(): OrderNotification[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(NOTIFICATIONS_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function saveNotification(notification: OrderNotification): void {
+  if (typeof window !== 'undefined') {
+    const notifications = getNotifications()
+    notifications.push(notification)
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications))
+  }
+}
+
+// Analytics operations
+export function getAnalytics(): SalesAnalytics[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(ANALYTICS_KEY)
+    return data ? JSON.parse(data) : []
+  }
+  return []
+}
+
+export function saveAnalytics(analytics: SalesAnalytics): void {
+  if (typeof window !== 'undefined') {
+    const allAnalytics = getAnalytics()
+    const index = allAnalytics.findIndex(a => a.date === analytics.date)
+    if (index >= 0) {
+      allAnalytics[index] = analytics
+    } else {
+      allAnalytics.push(analytics)
+    }
+    localStorage.setItem(ANALYTICS_KEY, JSON.stringify(allAnalytics))
   }
 }
 
