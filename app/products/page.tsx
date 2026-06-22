@@ -67,7 +67,8 @@ function ProductsContent({
   } else if (sort === 'price-high') {
     filtered.sort((a, b) => parseFloat(b.price.toString()) - parseFloat(a.price.toString()))
   } else if (sort === 'newest') {
-    filtered.sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0))
+    // Sort by product ID (newest first)
+    filtered.sort((a, b) => b.id.localeCompare(a.id))
   } else if (sort === 'rating') {
     filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
   } else if (sort === 'popular') {

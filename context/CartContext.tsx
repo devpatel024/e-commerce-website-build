@@ -44,13 +44,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (mounted) {
       localStorage.setItem('cart', JSON.stringify(items))
-      // Dispatch custom event for other tabs/windows
-      window.dispatchEvent(new Event('cartUpdated'))
     }
   }, [items, mounted])
 
   // Listen for storage changes from other tabs
   useEffect(() => {
+    if (!mounted) return
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'cart' && e.newValue) {
         try {
@@ -61,25 +61,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const handleCartUpdate = () => {
-      const savedCart = localStorage.getItem('cart')
-      if (savedCart) {
-        try {
-          setItems(JSON.parse(savedCart))
-        } catch (e) {
-          console.log('[v0] Error parsing cart from custom event:', e)
-        }
-      }
-    }
-
     window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('cartUpdated', handleCartUpdate)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('cartUpdated', handleCartUpdate)
     }
-  }, [])
+  }, [mounted])
 
   const addToCart = useCallback((item: CartItem) => {
     setItems((prevItems) => {

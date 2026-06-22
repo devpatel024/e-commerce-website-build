@@ -1,4 +1,8 @@
-import { auth } from '@/lib/auth'
-import { toNextJsHandler } from 'better-auth/next-js'
+// Auth API endpoints - using client-side auth context
+export async function GET() {
+  return Response.json({ error: 'Not implemented' }, { status: 404 })
+}
 
-export const { GET, POST } = toNextJsHandler(auth.handler)
+export async function POST() {
+  return Response.json({ error: 'Not implemented' }, { status: 404 })
+}

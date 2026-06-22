@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   // Load session on mount
   useEffect(() => {
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session.user)
     }
     setIsLoading(false)
+    setMounted(true)
   }, [])
 
   const login = async (email: string, password: string) => {
@@ -72,13 +74,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: user !== null,
+    user: mounted ? user : null,
+    isLoading: !mounted || isLoading,
+    isAuthenticated: mounted && user !== null,
     login,
     register,
     logout,
-    isAdmin: checkIsAdmin,
+    isAdmin: mounted && checkIsAdmin,
     hasRole: checkHasRole,
   }
 

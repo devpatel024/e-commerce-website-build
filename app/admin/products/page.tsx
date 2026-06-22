@@ -64,12 +64,17 @@ export default function AdminProductsPage() {
       return
     }
 
+    const validSubcategories = ['rings', 'necklaces', 'earrings', 'bracelets', 'tops', 'bottoms', 'dresses', 'accessories']
+    const subcategory = formData.subcategory && validSubcategories.includes(formData.subcategory as string)
+      ? (formData.subcategory as 'rings' | 'necklaces' | 'earrings' | 'bracelets' | 'tops' | 'bottoms' | 'dresses' | 'accessories')
+      : 'rings'
+
     const product: Product = {
       id: editingId || `prod-${Date.now()}`,
       name: formData.name,
       price: formData.price,
       category: formData.category as 'jewellery' | 'clothes',
-      subcategory: formData.subcategory as string,
+      subcategory,
       description: formData.description || '',
       image: formData.image,
       stock: formData.stock || 0,
