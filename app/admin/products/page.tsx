@@ -76,12 +76,12 @@ export default function AdminProductsPage() {
 
       const product: Product = {
         id: editingId || `prod-${Date.now()}`,
-        name: formData.name,
-        price: formData.price,
+        name: formData.name || '',
+        price: formData.price || 0,
         category: formData.category as 'jewellery' | 'clothes',
         subcategory,
         description: formData.description || '',
-        image: formData.image,
+        image: formData.image || '',
         stock: formData.stock || 0,
       }
 

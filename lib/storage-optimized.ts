@@ -84,8 +84,7 @@ export function calculateCartTotalsOptimized(): {
   cart.forEach(item => {
     const product = productMap.get(item.productId)
     if (product) {
-      const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price
-      subtotal += price * item.quantity
+      subtotal += product.price * item.quantity
       itemCount += item.quantity
     }
   })

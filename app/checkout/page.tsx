@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -12,7 +12,7 @@ import { useAuthContext } from '@/components/AuthProvider'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isLoading: authLoading } = useAuthContext()
@@ -102,7 +102,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             action: 'create-session',
             items,
-            total: calculateTotal(),
+            total: calculateTotal,
             customer: {
               name: formData.name,
               email: formData.email,
@@ -150,7 +150,7 @@ export default function CheckoutPage() {
               variant: item.variant,
             }
           }),
-          total: calculateTotal(),
+          total: calculateTotal,
           customer: {
             name: formData.name,
             email: formData.email,
@@ -428,5 +428,13 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutPageContent />
+    </Suspense>
   )
 }
