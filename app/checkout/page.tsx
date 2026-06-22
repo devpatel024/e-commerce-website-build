@@ -134,41 +134,41 @@ function CheckoutPageContent() {
         return
       }
 
+      // Save order immediately without delay
+      const order: Order = {
+        id: `ORD-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        items: cartItems.map(item => {
+          const product = getProductById(item.productId)
+          return {
+            productId: item.productId,
+            productName: product?.name || '',
+            quantity: item.quantity,
+            price: product?.price || 0,
+            size: item.size,
+            variant: item.variant,
+          }
+        }),
+        total: calculateTotal,
+        customer: {
+          name: formData.name,
+          email: formData.email,
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+        },
+      }
+
+      saveOrder(order)
+      clearCart()
+      setOrderPlaced(true)
+      setIsProcessing(false)
+
+      // Quick redirect with minimal delay for UX feedback
       setTimeout(() => {
-        const order: Order = {
-          id: `ORD-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-          items: cartItems.map(item => {
-            const product = getProductById(item.productId)
-            return {
-              productId: item.productId,
-              productName: product?.name || '',
-              quantity: item.quantity,
-              price: product?.price || 0,
-              size: item.size,
-              variant: item.variant,
-            }
-          }),
-          total: calculateTotal,
-          customer: {
-            name: formData.name,
-            email: formData.email,
-            address: formData.address,
-            city: formData.city,
-            postalCode: formData.postalCode,
-          },
-        }
-
-        saveOrder(order)
-        clearCart()
-        setOrderPlaced(true)
-        setIsProcessing(false)
-
-        setTimeout(() => {
-          router.push(`/order-confirmation/${order.id}`)
-        }, 2000)
-      }, 1500)
+        router.push(`/order-confirmation/${order.id}`)
+      }, 300)
     }
   }
 

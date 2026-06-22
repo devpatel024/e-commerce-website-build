@@ -132,16 +132,24 @@ export default function OrderConfirmation() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Link
-              href="/products"
-              className="flex-1 bg-foreground text-background py-3 font-semibold text-center hover:bg-accent hover:text-white transition-colors"
-            >
-              Continue Shopping
-            </Link>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4">
+              <Link
+                href="/account"
+                className="flex-1 bg-accent text-white py-3 font-semibold text-center hover:bg-accent/90 transition-colors"
+              >
+                View Your Orders
+              </Link>
+              <Link
+                href="/products"
+                className="flex-1 bg-foreground text-background py-3 font-semibold text-center hover:bg-accent hover:text-white transition-colors"
+              >
+                Continue Shopping
+              </Link>
+            </div>
             <Link
               href="/"
-              className="flex-1 border border-foreground py-3 font-semibold text-center hover:bg-foreground hover:text-background transition-colors"
+              className="border border-foreground py-3 font-semibold text-center hover:bg-foreground hover:text-background transition-colors"
             >
               Return to Home
             </Link>

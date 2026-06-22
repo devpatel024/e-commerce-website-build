@@ -78,6 +78,26 @@ export default function AdminDashboardPage() {
       <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="font-heading text-3xl font-bold mb-8">Dashboard Overview</h2>
 
+        {/* Alert for Pending Orders */}
+        {orders.filter(o => o.status === 'pending').length > 0 && (
+          <div className="mb-8 border-l-4 border-accent bg-accent/5 p-6 rounded-r">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Action Required</h3>
+                <p className="text-sm text-muted-foreground">
+                  You have {orders.filter(o => o.status === 'pending').length} pending order{orders.filter(o => o.status === 'pending').length > 1 ? 's' : ''} waiting to be processed.
+                </p>
+              </div>
+              <Link
+                href="/admin/orders"
+                className="bg-accent text-white px-4 py-2 rounded font-semibold text-sm hover:bg-accent/90 transition-colors whitespace-nowrap ml-4"
+              >
+                Process Orders →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
           {/* Total Orders */}
