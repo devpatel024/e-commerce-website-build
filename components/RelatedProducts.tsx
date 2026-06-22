@@ -8,7 +8,7 @@ import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
 
 interface RelatedProductsProps {
-  product: Product
+  product: Product | any
   limit?: number
 }
 

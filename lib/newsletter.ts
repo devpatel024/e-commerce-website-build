@@ -95,7 +95,7 @@ export function getActiveSubscriberCount(): number {
 export function isSubscribed(email: string): boolean {
   const subscribers = getNewsletterSubscribers()
   const subscriber = subscribers.find(s => s.email.toLowerCase() === email.toLowerCase())
-  return subscriber?.status === 'active' ?? false
+  return (subscriber?.status === 'active') || false
 }
 
 /**
