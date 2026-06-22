@@ -5,6 +5,7 @@ import { useAuthContext } from './AuthProvider'
 import { useCart } from '@/context/CartContext'
 import { ShoppingBag, LogOut, Menu, X, User, Heart } from 'lucide-react'
 import { useState } from 'react'
+import SearchBar from './SearchBar'
 
 export default function Header() {
   const { user, logout } = useAuthContext()
@@ -25,7 +26,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-8 flex-1 px-8">
             <Link
               href="/"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -50,6 +51,7 @@ export default function Header() {
             >
               Clothes
             </Link>
+            <SearchBar />
           </div>
 
           {/* Right Section */}

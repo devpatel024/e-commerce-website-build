@@ -12,6 +12,8 @@ import { ShoppingBag, Check, Heart, Loader2 } from 'lucide-react'
 import { formatPrice } from '@/lib/price-formatter'
 import ProductReviews from '@/components/ProductReviews'
 import { addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/storage'
+import { addToRecentlyViewed } from '@/lib/recently-viewed'
+import RelatedProducts from '@/components/RelatedProducts'
 
 interface Product {
   id: string
@@ -48,6 +50,8 @@ export default function ProductDetail() {
         setProduct(prod || null)
         if (prod) {
           setInWishlist(isInWishlist(prod.id))
+          // Track recently viewed
+          addToRecentlyViewed(prod.id)
         }
         if (!prod) {
           setError('Product not found')
@@ -264,6 +268,9 @@ export default function ProductDetail() {
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <ProductReviews productId={product.id} />
         </div>
+
+        {/* Related Products Section */}
+        <RelatedProducts product={product} />
       </main>
 
       <Footer />
