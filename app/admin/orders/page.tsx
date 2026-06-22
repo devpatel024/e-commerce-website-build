@@ -46,6 +46,12 @@ export default function AdminOrders() {
     delivered: 'bg-green-100 text-green-800',
   }
 
+  const paymentStatusColors: Record<string, string> = {
+    pending: 'bg-gray-100 text-gray-800',
+    completed: 'bg-green-100 text-green-800',
+    failed: 'bg-red-100 text-red-800',
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -124,18 +130,18 @@ export default function AdminOrders() {
                   className="bg-secondary/30 p-6 cursor-pointer hover:bg-secondary/50 transition-colors"
                   onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
                 >
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-5 items-center">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-6 items-center">
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Order ID</p>
-                      <p className="font-semibold">{order.id}</p>
+                      <p className="font-semibold text-sm">{order.id}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Customer</p>
-                      <p className="font-semibold">{order.customer.name}</p>
+                      <p className="font-semibold text-sm">{order.customer.name}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Total</p>
-                      <p className="font-semibold">{formatPrice(order.total)}</p>
+                      <p className="font-semibold text-sm">{formatPrice(order.total)}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Status</p>
@@ -143,9 +149,17 @@ export default function AdminOrders() {
                         {order.status}
                       </span>
                     </div>
+                    {order.paymentStatus && (
+                      <div>
+                        <p className="text-xs uppercase text-muted-foreground font-semibold">Payment</p>
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${paymentStatusColors[order.paymentStatus]}`}>
+                          {order.paymentStatus}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <p className="text-xs uppercase text-muted-foreground font-semibold">Date</p>
-                      <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
+                      <p className="font-semibold text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </div>

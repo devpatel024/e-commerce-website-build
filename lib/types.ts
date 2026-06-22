@@ -60,6 +60,9 @@ export interface Order {
     city: string
     postalCode: string
   }
+  paymentStatus?: 'pending' | 'completed' | 'failed'
+  stripeSessionId?: string
+  stripePaymentIntentId?: string
 }
 
 export interface OrderItem {

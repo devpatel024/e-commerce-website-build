@@ -12,6 +12,7 @@ import { formatPrice } from '@/lib/price-formatter'
 export default function CheckoutPage() {
   const router = useRouter()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'manual'>('stripe')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -51,7 +52,7 @@ export default function CheckoutPage() {
     return subtotal * 1.1 // Including 10% tax
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validate form
@@ -60,51 +61,96 @@ export default function CheckoutPage() {
       return
     }
 
-    if (!formData.cardNumber || !formData.cardExpiry || !formData.cardCVC) {
-      alert('Please fill in all payment details')
-      return
-    }
-
     setIsProcessing(true)
 
-    // Simulate payment processing
-    setTimeout(() => {
-      // Create order
-      const order: Order = {
-        id: `ORD-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        items: cartItems.map(item => {
+    if (paymentMethod === 'stripe') {
+      try {
+        // Use Stripe checkout
+        const items = cartItems.map(item => {
           const product = getProductById(item.productId)
           return {
-            productId: item.productId,
-            productName: product?.name || '',
-            quantity: item.quantity,
+            name: product?.name || '',
+            description: product?.description || '',
             price: product?.price || 0,
-            size: item.size,
-            variant: item.variant,
+            image: product?.image || '',
+            quantity: item.quantity,
           }
-        }),
-        total: calculateTotal(),
-        customer: {
-          name: formData.name,
-          email: formData.email,
-          address: formData.address,
-          city: formData.city,
-          postalCode: formData.postalCode,
-        },
+        })
+
+        const response = await fetch('/api/stripe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create-session',
+            items,
+            total: calculateTotal(),
+            customer: {
+              name: formData.name,
+              email: formData.email,
+              address: formData.address,
+              city: formData.city,
+              postalCode: formData.postalCode,
+            },
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.sessionId) {
+          // Redirect to Stripe hosted checkout
+          // In production, use Stripe.js library for client-side redirect
+          // For now, redirect to a payment processing page
+          window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`
+        }
+      } catch (error) {
+        console.error('Stripe error:', error)
+        alert('Payment processing failed. Please try again.')
+        setIsProcessing(false)
+      }
+    } else {
+      // Manual payment (existing logic)
+      if (!formData.cardNumber || !formData.cardExpiry || !formData.cardCVC) {
+        alert('Please fill in all payment details')
+        setIsProcessing(false)
+        return
       }
 
-      saveOrder(order)
-      clearCart()
-      setOrderPlaced(true)
-      setIsProcessing(false)
-
-      // Redirect to order confirmation after 2 seconds
       setTimeout(() => {
-        router.push(`/order-confirmation/${order.id}`)
-      }, 2000)
-    }, 1500)
+        const order: Order = {
+          id: `ORD-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+          status: 'pending',
+          items: cartItems.map(item => {
+            const product = getProductById(item.productId)
+            return {
+              productId: item.productId,
+              productName: product?.name || '',
+              quantity: item.quantity,
+              price: product?.price || 0,
+              size: item.size,
+              variant: item.variant,
+            }
+          }),
+          total: calculateTotal(),
+          customer: {
+            name: formData.name,
+            email: formData.email,
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
+          },
+        }
+
+        saveOrder(order)
+        clearCart()
+        setOrderPlaced(true)
+        setIsProcessing(false)
+
+        setTimeout(() => {
+          router.push(`/order-confirmation/${order.id}`)
+        }, 2000)
+      }, 1500)
+    }
   }
 
   if (cartItems.length === 0 && !orderPlaced) {
@@ -224,46 +270,83 @@ export default function CheckoutPage() {
 
                 {/* Payment Information */}
                 <div className="border border-border p-6">
-                  <h2 className="font-semibold text-lg mb-4">Payment Information</h2>
+                  <h2 className="font-semibold text-lg mb-4">Payment Method</h2>
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Card Number</label>
-                      <input
-                        type="text"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleInputChange}
-                        placeholder="1234 5678 9012 3456"
-                        required
-                        className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Expiry Date</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
-                          type="text"
-                          name="cardExpiry"
-                          value={formData.cardExpiry}
-                          onChange={handleInputChange}
-                          placeholder="MM/YY"
-                          required
-                          className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                          type="radio"
+                          name="paymentMethod"
+                          value="stripe"
+                          checked={paymentMethod === 'stripe'}
+                          onChange={(e) => setPaymentMethod(e.target.value as 'stripe' | 'manual')}
+                          className="w-4 h-4"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">CVC</label>
+                        <span className="text-foreground">Stripe (Recommended)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
-                          type="text"
-                          name="cardCVC"
-                          value={formData.cardCVC}
-                          onChange={handleInputChange}
-                          placeholder="123"
-                          required
-                          className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                          type="radio"
+                          name="paymentMethod"
+                          value="manual"
+                          checked={paymentMethod === 'manual'}
+                          onChange={(e) => setPaymentMethod(e.target.value as 'stripe' | 'manual')}
+                          className="w-4 h-4"
                         />
-                      </div>
+                        <span className="text-foreground">Manual Payment</span>
+                      </label>
                     </div>
+
+                    {paymentMethod === 'stripe' && (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-900">
+                          You will be redirected to Stripe&apos;s secure checkout page to complete your payment.
+                        </p>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'manual' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Card Number</label>
+                          <input
+                            type="text"
+                            name="cardNumber"
+                            value={formData.cardNumber}
+                            onChange={handleInputChange}
+                            placeholder="1234 5678 9012 3456"
+                            required={paymentMethod === 'manual'}
+                            className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Expiry Date</label>
+                            <input
+                              type="text"
+                              name="cardExpiry"
+                              value={formData.cardExpiry}
+                              onChange={handleInputChange}
+                              placeholder="MM/YY"
+                              required={paymentMethod === 'manual'}
+                              className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">CVC</label>
+                            <input
+                              type="text"
+                              name="cardCVC"
+                              value={formData.cardCVC}
+                              onChange={handleInputChange}
+                              placeholder="123"
+                              required={paymentMethod === 'manual'}
+                              className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
