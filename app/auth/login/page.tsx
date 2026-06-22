@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthContext } from '@/components/AuthProvider'
+import { Loader2 } from 'lucide-react'
 
 type AuthTab = 'user-login' | 'user-register' | 'admin-login'
 
 export default function AuthPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, isLoading, login, register } = useAuthContext()
   const [activeTab, setActiveTab] = useState<AuthTab>('user-login')
+  const returnTo = searchParams.get('returnTo')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,9 +26,18 @@ export default function AuthPage() {
   useEffect(() => {
     // Redirect if already logged in
     if (!isLoading && user) {
-      router.push(user.role === 'admin' ? '/admin/dashboard' : '/')
+      // If user is admin, always go to admin dashboard
+      if (user.role === 'admin') {
+        router.push('/admin/dashboard')
+      } else {
+        // For regular users, go to returnTo if specified, otherwise home
+        const destination = returnTo && (returnTo.startsWith('/') || returnTo.startsWith('http'))
+          ? returnTo
+          : '/'
+        router.push(destination)
+      }
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, returnTo])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -213,8 +225,9 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
@@ -301,8 +314,9 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
@@ -341,8 +355,9 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? 'Verifying...' : 'Admin Login'}
                 </button>
               </form>

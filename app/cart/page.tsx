@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useCart } from '@/context/CartContext'
-import { X, Plus, Minus } from 'lucide-react'
+import { X, Plus, Minus, Loader2 } from 'lucide-react'
 import { formatPrice } from '@/lib/price-formatter'
+import { useState } from 'react'
 
 export default function CartPage() {
   const router = useRouter()
   const { items, removeFromCart, updateQuantity, clearCart } = useCart()
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
 
   const subtotal = items.reduce((sum, item) => {
     const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price
@@ -148,10 +150,16 @@ export default function CartPage() {
                 </div>
 
                 <button
-                  onClick={() => router.push('/checkout')}
-                  className="w-full bg-foreground text-background py-3 px-4 font-semibold rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-lg"
+                  onClick={() => {
+                    setIsCheckoutLoading(true)
+                    // Small delay to show loading state
+                    setTimeout(() => router.push('/checkout'), 300)
+                  }}
+                  disabled={isCheckoutLoading}
+                  className="w-full bg-foreground text-background py-3 px-4 font-semibold rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Proceed to Checkout
+                  {isCheckoutLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isCheckoutLoading ? 'Redirecting...' : 'Proceed to Checkout'}
                 </button>
 
                 <button

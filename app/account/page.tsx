@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
@@ -17,16 +18,33 @@ import {
 } from '@/lib/storage'
 import { Product, Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
-import { Heart, Star, Trash2, ArrowRight, ShoppingBag, Eye } from 'lucide-react'
+import { Heart, Star, Trash2, ArrowRight, ShoppingBag, Eye, Loader2 } from 'lucide-react'
+import { useAuthContext } from '@/components/AuthProvider'
 
 export default function AccountPage() {
+  const router = useRouter()
+  const { user, isLoading: authLoading } = useAuthContext()
   const [activeTab, setActiveTab] = useState<'orders' | 'wishlist' | 'favorites'>('orders')
   const [orders, setOrders] = useState<Order[]>([])
   const [wishlistProducts, setWishlistProducts] = useState<Product[]>([])
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([])
   const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [showAuthRedirect, setShowAuthRedirect] = useState(false)
+
+  // Auth gate - redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setShowAuthRedirect(true)
+      const timer = setTimeout(() => {
+        router.push(`/auth/login?returnTo=${encodeURIComponent('/account')}`)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [user, authLoading, router])
 
   useEffect(() => {
+    if (!user) return // Don't load data until auth is verified
+
     initializeStorage()
     const products = getProducts()
     setAllProducts(products)
@@ -46,7 +64,7 @@ export default function AccountPage() {
       .map(id => getProductById(id))
       .filter(Boolean) as Product[]
     setFavoriteProducts(favoriteProds)
-  }, [])
+  }, [user])
 
   const handleRemoveFromWishlist = (productId: string) => {
     removeFromWishlist(productId)
@@ -140,6 +158,24 @@ export default function AccountPage() {
       </div>
     </div>
   )
+
+  // Show loading state during auth redirect
+  if (authLoading || showAuthRedirect) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              {showAuthRedirect ? 'Redirecting to login...' : 'Loading account...'}
+            </p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

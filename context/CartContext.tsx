@@ -70,16 +70,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback((item: CartItem) => {
     setItems((prevItems) => {
-      const existingItem = prevItems.find(
+      const existingItemIndex = prevItems.findIndex(
         (i) => i.productId === item.productId && i.size === item.size && i.variant === item.variant
       )
 
-      if (existingItem) {
-        return prevItems.map((i) =>
-          i === existingItem
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        )
+      if (existingItemIndex >= 0) {
+        const newItems = [...prevItems]
+        newItems[existingItemIndex] = {
+          ...newItems[existingItemIndex],
+          quantity: newItems[existingItemIndex].quantity + item.quantity,
+        }
+        return newItems
       }
 
       return [...prevItems, item]
