@@ -44,8 +44,11 @@ export default function OrderConfirmation() {
             <p className="text-muted-foreground mb-6">
               Thank you for your purchase! Your order has been successfully placed.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               A confirmation email has been sent to <span className="font-semibold">{order.customer.email}</span>
+            </p>
+            <p className="text-xs text-accent font-semibold">
+              Your cart has been cleared. Ready to shop again?
             </p>
           </div>
 
