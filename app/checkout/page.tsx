@@ -117,6 +117,8 @@ function CheckoutPageContent() {
 
     saveOrder(order)
     clearCart()
+    // Ensure localStorage is cleared for this user's cart
+    localStorage.removeItem('luxe_cart')
     setOrderPlaced(true)
     setIsProcessing(false)
 
@@ -126,7 +128,7 @@ function CheckoutPageContent() {
     }, 300)
   }
 
-  if (authLoading || showAuthRedirect || (cartItems.length === 0 && !orderPlaced)) {
+  if (authLoading || showAuthRedirect) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
@@ -136,6 +138,26 @@ function CheckoutPageContent() {
             <p className="text-muted-foreground">
               {showAuthRedirect ? 'Redirecting to login...' : 'Loading checkout...'}
             </p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (cartItems.length === 0 && !orderPlaced) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Your cart is empty</p>
+            <Link
+              href="/products"
+              className="bg-foreground text-background px-6 py-2 font-semibold hover:bg-accent transition-colors"
+            >
+              Continue Shopping
+            </Link>
           </div>
         </main>
         <Footer />
