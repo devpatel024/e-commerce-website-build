@@ -30,7 +30,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Initialize from localStorage on mount
   useEffect(() => {
     setMounted(true)
-    const savedCart = localStorage.getItem('cart')
+    const savedCart = localStorage.getItem('luxe_cart')
     if (savedCart) {
       try {
         setItems(JSON.parse(savedCart))
@@ -43,7 +43,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save to localStorage whenever items change
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem('cart', JSON.stringify(items))
+      localStorage.setItem('luxe_cart', JSON.stringify(items))
     }
   }, [items, mounted])
 
@@ -52,7 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cart' && e.newValue) {
+      if (e.key === 'luxe_cart' && e.newValue) {
         try {
           setItems(JSON.parse(e.newValue))
         } catch (err) {

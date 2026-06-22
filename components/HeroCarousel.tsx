@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Slide {
@@ -36,33 +35,38 @@ const heroSlides: Slide[] = [
 export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoPlay, setAutoPlay] = useState(true)
+  const [direction, setDirection] = useState<'next' | 'prev'>('next')
 
   useEffect(() => {
     if (!autoPlay) return
 
     const interval = setInterval(() => {
+      setDirection('next')
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
-    }, 5000)
+    }, 6000)
 
     return () => clearInterval(interval)
   }, [autoPlay])
 
   const goToSlide = (index: number) => {
+    setDirection(index > currentSlide ? 'next' : 'prev')
     setCurrentSlide(index)
     setAutoPlay(false)
-    setTimeout(() => setAutoPlay(true), 10000)
+    setTimeout(() => setAutoPlay(true), 8000)
   }
 
   const nextSlide = () => {
+    setDirection('next')
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
     setAutoPlay(false)
-    setTimeout(() => setAutoPlay(true), 10000)
+    setTimeout(() => setAutoPlay(true), 8000)
   }
 
   const prevSlide = () => {
+    setDirection('prev')
     setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)
     setAutoPlay(false)
-    setTimeout(() => setAutoPlay(true), 10000)
+    setTimeout(() => setAutoPlay(true), 8000)
   }
 
   const slide = heroSlides[currentSlide]
@@ -71,49 +75,65 @@ export default function HeroCarousel() {
     <section className="relative w-full h-screen bg-background overflow-hidden group">
       {/* Slides Container */}
       <div className="relative w-full h-full">
-        {heroSlides.map((s, index) => (
-          <div
-            key={s.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <Image
-              src={s.image}
-              alt={s.title}
-              fill
-              className="object-cover"
-              priority={index === 0}
-              quality={90}
-            />
-            {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/30" />
-          </div>
-        ))}
+        {heroSlides.map((s, index) => {
+          const isActive = index === currentSlide
+          const isNext = (index === (currentSlide + 1) % heroSlides.length)
+          const isPrev = (index === (currentSlide - 1 + heroSlides.length) % heroSlides.length)
+          
+          return (
+            <div
+              key={s.id}
+              className={`absolute inset-0 transition-all duration-1200 ease-out ${
+                isActive
+                  ? 'opacity-100 scale-100'
+                  : direction === 'next'
+                    ? isNext
+                      ? 'opacity-0 scale-105'
+                      : 'opacity-0 scale-95'
+                    : isPrev
+                      ? 'opacity-0 scale-105'
+                      : 'opacity-0 scale-95'
+              }`}
+              style={{
+                transitionTimingFunction: 'cubic-bezier(0.32, 0.72, 0.48, 1)',
+              }}
+            >
+              <Image
+                src={s.image}
+                alt={s.title}
+                fill
+                className="object-cover"
+                priority={index === 0}
+                quality={95}
+              />
+              {/* Dynamic gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
+            </div>
+          )
+        })}
       </div>
 
       {/* Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-        <div className="text-center max-w-3xl mx-auto px-4 animate-fade-in">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight font-heading">
+        <div
+          className={`text-center max-w-4xl mx-auto px-4 transition-all duration-1000 ease-out ${
+            currentSlide === currentSlide ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+          key={currentSlide}
+        >
+          <h1 className="text-5xl md:text-8xl font-bold text-white mb-6 tracking-tight font-heading drop-shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {slide.title}
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
+          <p className="text-lg md:text-3xl text-white/95 mb-12 leading-relaxed drop-shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
             {slide.subtitle}
           </p>
-          <Link
-            href="/products"
-            className="inline-block bg-foreground text-white px-8 md:px-12 py-3 md:py-4 font-semibold hover:bg-accent hover:text-white transition-all duration-300 rounded-lg hover:shadow-lg hover:scale-105"
-          >
-            Shop Collection
-          </Link>
         </div>
       </div>
 
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 md:p-4 transition-all duration-300 opacity-0 group-hover:opacity-100"
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md hover:bg-white/30 text-white p-3 md:p-4 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 rounded-full border border-white/20"
         aria-label="Previous slide"
       >
         <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
@@ -121,20 +141,22 @@ export default function HeroCarousel() {
 
       <button
         onClick={nextSlide}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 md:p-4 transition-all duration-300 opacity-0 group-hover:opacity-100"
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md hover:bg-white/30 text-white p-3 md:p-4 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 rounded-full border border-white/20"
         aria-label="Next slide"
       >
         <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
       </button>
 
       {/* Dots Navigation */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
         {heroSlides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide ? 'bg-white w-8 md:w-10' : 'bg-white/50 hover:bg-white/75'
+            className={`rounded-full transition-all duration-500 ${
+              index === currentSlide
+                ? 'bg-white w-10 h-2 md:w-12 shadow-lg'
+                : 'bg-white/40 hover:bg-white/70 w-2 h-2 md:w-3 md:h-3'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
