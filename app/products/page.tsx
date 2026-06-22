@@ -8,7 +8,8 @@ import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
-import { Search, Star } from 'lucide-react'
+import { Search, Star, Loader2 } from 'lucide-react'
+import { ProductListSkeleton } from '@/components/SkeletonLoader'
 
 const subcategories = {
   jewellery: ['rings', 'necklaces', 'earrings', 'bracelets'],
@@ -188,10 +189,10 @@ function ProductsContent({
             <p className="text-muted-foreground">No products found. Try adjusting your filters.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((prod, idx) => (
-              <Link key={prod.id} href={`/product/${prod.id}`} className="group">
-                <div className={`relative h-80 bg-secondary/30 overflow-hidden rounded-lg mb-4 animate-fade-in delay-${idx * 100}`}>
+              <Link key={prod.id} href={`/product/${prod.id}`} className="group block transition-all duration-300 hover:-translate-y-2">
+                <div className={`relative h-80 bg-secondary/30 overflow-hidden rounded-lg mb-4 animate-fade-in delay-${idx * 100} border border-border/40 group-hover:border-accent/30 group-hover:shadow-lg transition-all duration-300`}>
                   <Image
                     src={prod.image}
                     alt={prod.name}
@@ -246,10 +247,17 @@ export default function ProductsPage({
   searchParams: Record<string, string | string[] | undefined>
 }) {
   const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    initializeStorage()
-    setProducts(getProducts())
+    setIsLoading(true)
+    // Simulate loading delay for better UX
+    const timer = setTimeout(() => {
+      initializeStorage()
+      setProducts(getProducts())
+      setIsLoading(false)
+    }, 300)
+    return () => clearTimeout(timer)
   }, [])
 
   const category = typeof searchParams.category === 'string' ? searchParams.category : undefined
@@ -269,7 +277,9 @@ export default function ProductsPage({
             <p className="text-muted-foreground">Discover our premium collections</p>
           </div>
 
-          {products.length > 0 ? (
+          {isLoading ? (
+            <ProductListSkeleton />
+          ) : products.length > 0 ? (
             <ProductsContent
               category={category}
               subcategory={subcategory}

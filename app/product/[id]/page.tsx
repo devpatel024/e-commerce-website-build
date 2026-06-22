@@ -8,10 +8,12 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { useCart } from '@/context/CartContext'
-import { ShoppingBag, Check, Heart } from 'lucide-react'
+import { ShoppingBag, Check, Heart, Loader2 } from 'lucide-react'
 import { formatPrice } from '@/lib/price-formatter'
 import ProductReviews from '@/components/ProductReviews'
 import { addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/storage'
+import { addToRecentlyViewed } from '@/lib/recently-viewed'
+import RelatedProducts from '@/components/RelatedProducts'
 
 interface Product {
   id: string
@@ -37,6 +39,7 @@ export default function ProductDetail() {
   const [added, setAdded] = useState(false)
   const [inWishlist, setInWishlist] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
 
   useEffect(() => {
     const loadProduct = () => {
@@ -47,6 +50,8 @@ export default function ProductDetail() {
         setProduct(prod || null)
         if (prod) {
           setInWishlist(isInWishlist(prod.id))
+          // Track recently viewed
+          addToRecentlyViewed(prod.id)
         }
         if (!prod) {
           setError('Product not found')
@@ -63,7 +68,8 @@ export default function ProductDetail() {
   }, [params.id, params])
 
   const handleAddToCart = () => {
-    if (product) {
+    if (product && !isAddingToCart) {
+      setIsAddingToCart(true)
       addToCart({
         productId: product.id,
         name: product.name,
@@ -72,7 +78,10 @@ export default function ProductDetail() {
         quantity,
       })
       setAdded(true)
-      setTimeout(() => setAdded(false), 2000)
+      setTimeout(() => {
+        setAdded(false)
+        setIsAddingToCart(false)
+      }, 1500)
     }
   }
 
@@ -204,13 +213,18 @@ export default function ProductDetail() {
               {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={product.stock === 0 || isAddingToCart}
                 className="w-full bg-foreground text-background py-4 px-6 font-semibold rounded-lg hover:bg-accent hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-3 group hover:shadow-lg hover:scale-105"
               >
                 {added ? (
                   <>
                     <Check className="w-5 h-5 animation-pulse" />
                     <span>Added to Cart!</span>
+                  </>
+                ) : isAddingToCart ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Adding...</span>
                   </>
                 ) : (
                   <>
@@ -254,6 +268,9 @@ export default function ProductDetail() {
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <ProductReviews productId={product.id} />
         </div>
+
+        {/* Related Products Section */}
+        <RelatedProducts product={product} />
       </main>
 
       <Footer />

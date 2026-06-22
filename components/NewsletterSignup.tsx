@@ -1,23 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Check } from 'lucide-react'
+import { Mail, Check, AlertCircle } from 'lucide-react'
+import { subscribeToNewsletter } from '@/lib/newsletter'
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) return
 
     setLoading(true)
+    setError('')
+    
+    // Simulate processing
     setTimeout(() => {
+      const success = subscribeToNewsletter(email)
       setLoading(false)
-      setSubmitted(true)
-      setEmail('')
-      setTimeout(() => setSubmitted(false), 3000)
+      
+      if (success) {
+        setSubmitted(true)
+        setEmail('')
+        setTimeout(() => setSubmitted(false), 3000)
+      } else {
+        setError('Invalid email or already subscribed')
+        setTimeout(() => setError(''), 3000)
+      }
     }, 800)
   }
 
@@ -73,6 +85,14 @@ export default function NewsletterSignup() {
             <p className="text-white font-semibold">
               Welcome to our exclusive club! Check your email for special welcome offer.
             </p>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 animate-slide-up flex items-center justify-center gap-2 text-white">
+            <AlertCircle className="w-4 h-4" />
+            <p className="font-semibold">{error}</p>
           </div>
         )}
 

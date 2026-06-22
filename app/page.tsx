@@ -13,6 +13,7 @@ import TrustBadges from '@/components/TrustBadges'
 import FeaturedCollections from '@/components/FeaturedCollections'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import PromoBanner from '@/components/PromoBanner'
+import RecentlyViewed from '@/components/RecentlyViewed'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
@@ -77,6 +78,9 @@ export default function Home() {
           badge="trending"
           showCount={8}
         />
+
+        {/* Recently Viewed Section */}
+        <RecentlyViewed />
 
         {/* Trust Badges */}
         <TrustBadges />

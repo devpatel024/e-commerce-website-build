@@ -1,16 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getCart, clearCart, getProductById, saveOrder, initializeStorage } from '@/lib/storage'
 import { CartItem, Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
+import { useAuthContext } from '@/components/AuthProvider'
+import { Loader2 } from 'lucide-react'
+import { useCallback, useMemo } from 'react'
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, isLoading: authLoading } = useAuthContext()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'manual'>('stripe')
   const [formData, setFormData] = useState({
@@ -25,8 +30,22 @@ export default function CheckoutPage() {
   })
   const [isProcessing, setIsProcessing] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
+  const [showAuthRedirect, setShowAuthRedirect] = useState(false)
 
   useEffect(() => {
+    // Check auth status - redirect to login if not authenticated
+    if (!authLoading && !user) {
+      setShowAuthRedirect(true)
+      const timer = setTimeout(() => {
+        router.push(`/auth/login?returnTo=${encodeURIComponent('/checkout')}`)
+      }, 500) // Small delay to show loading state
+      return () => clearTimeout(timer)
+    }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (!user) return // Don't load cart until auth is verified
+
     initializeStorage()
     const items = getCart()
     if (items.length === 0) {
@@ -34,23 +53,23 @@ export default function CheckoutPage() {
       return
     }
     setCartItems(items)
-  }, [router])
+  }, [user, router])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }))
-  }
+  }, [])
 
-  const calculateTotal = () => {
+  const calculateTotal = useMemo(() => {
     const subtotal = cartItems.reduce((sum, item) => {
       const product = getProductById(item.productId)
       return sum + (product?.price || 0) * item.quantity
     }, 0)
     return subtotal * 1.1 // Including 10% tax
-  }
+  }, [cartItems])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,7 +102,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             action: 'create-session',
             items,
-            total: calculateTotal(),
+            total: calculateTotal,
             customer: {
               name: formData.name,
               email: formData.email,
@@ -115,50 +134,55 @@ export default function CheckoutPage() {
         return
       }
 
+      // Save order immediately without delay
+      const order: Order = {
+        id: `ORD-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        items: cartItems.map(item => {
+          const product = getProductById(item.productId)
+          return {
+            productId: item.productId,
+            productName: product?.name || '',
+            quantity: item.quantity,
+            price: product?.price || 0,
+            size: item.size,
+            variant: item.variant,
+          }
+        }),
+        total: calculateTotal,
+        customer: {
+          name: formData.name,
+          email: formData.email,
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+        },
+      }
+
+      saveOrder(order)
+      clearCart()
+      setOrderPlaced(true)
+      setIsProcessing(false)
+
+      // Quick redirect with minimal delay for UX feedback
       setTimeout(() => {
-        const order: Order = {
-          id: `ORD-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-          items: cartItems.map(item => {
-            const product = getProductById(item.productId)
-            return {
-              productId: item.productId,
-              productName: product?.name || '',
-              quantity: item.quantity,
-              price: product?.price || 0,
-              size: item.size,
-              variant: item.variant,
-            }
-          }),
-          total: calculateTotal(),
-          customer: {
-            name: formData.name,
-            email: formData.email,
-            address: formData.address,
-            city: formData.city,
-            postalCode: formData.postalCode,
-          },
-        }
-
-        saveOrder(order)
-        clearCart()
-        setOrderPlaced(true)
-        setIsProcessing(false)
-
-        setTimeout(() => {
-          router.push(`/order-confirmation/${order.id}`)
-        }, 2000)
-      }, 1500)
+        router.push(`/order-confirmation/${order.id}`)
+      }, 300)
     }
   }
 
-  if (cartItems.length === 0 && !orderPlaced) {
+  if (authLoading || showAuthRedirect || (cartItems.length === 0 && !orderPlaced)) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              {showAuthRedirect ? 'Redirecting to login...' : 'Loading checkout...'}
+            </p>
+          </div>
         </main>
         <Footer />
       </div>
@@ -181,7 +205,7 @@ export default function CheckoutPage() {
     )
   }
 
-  const total = calculateTotal()
+  const total = calculateTotal
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -353,8 +377,9 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full bg-foreground text-background py-3 font-semibold hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-3 font-semibold hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isProcessing ? 'Processing...' : `Place Order - ${formatPrice(total)}`}
                 </button>
               </form>
@@ -403,5 +428,13 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutPageContent />
+    </Suspense>
   )
 }
