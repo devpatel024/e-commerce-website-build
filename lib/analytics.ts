@@ -31,7 +31,7 @@ export function calculateDashboardStats(orders: Order[], products: Product[]): D
   const outOfStockProducts = products.filter(p => p.stock === 0).length
 
   // Get unique customers
-  const uniqueCustomers = new Set(orders.map(o => o.userId)).size
+  const uniqueCustomers = new Set(orders.map(o => (o as any).customer?.email || (o as any).customerEmail)).size
 
   // Revenue by category
   const revenueByCategory: Record<string, number> = {}
