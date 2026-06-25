@@ -7,7 +7,6 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import HeroCarousel from '@/components/HeroCarousel'
 import NewsletterSignup from '@/components/NewsletterSignup'
-import PromoBanner from '@/components/PromoBanner'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
@@ -26,12 +25,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <PromoBanner
-        title="Summer Sale"
-        message="Get up to 50% off on selected items. Limited time offer!"
-        ctaText="Shop Now"
-        ctaHref="/products?badge=sale"
-      />
       <Header />
 
       <main className="flex-1">
