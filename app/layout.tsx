@@ -61,7 +61,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${crimsonText.variable} bg-background`}>
       <body className="font-sans antialiased">
-        <PageLoadingBar />
+        <div style={{ visibility: 'hidden' }}>
+          <PageLoadingBar />
+        </div>
         <ScrollProgressBar />
         <AuthProvider>
           <AddressProvider>
