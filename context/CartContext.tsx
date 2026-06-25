@@ -19,6 +19,7 @@ interface CartContextType {
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
+  removeOrderedItems: (productIds: string[]) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -110,10 +111,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([])
   }, [])
 
+  const removeOrderedItems = useCallback((productIds: string[]) => {
+    setItems((prevItems) => 
+      prevItems.filter((item) => !productIds.includes(item.productId))
+    )
+  }, [])
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
-    <CartContext.Provider value={{ items, itemCount, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ items, itemCount, addToCart, removeFromCart, updateQuantity, clearCart, removeOrderedItems }}>
       {children}
     </CartContext.Provider>
   )

@@ -7,9 +7,11 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getOrders, initializeStorage } from '@/lib/storage'
 import { Order } from '@/lib/types'
+import { useCart } from '@/context/CartContext'
 
 export default function OrderConfirmation() {
   const params = useParams()
+  const { removeOrderedItems } = useCart()
   const [order, setOrder] = useState<Order | null>(null)
 
   useEffect(() => {
@@ -17,7 +19,13 @@ export default function OrderConfirmation() {
     const orders = getOrders()
     const found = orders.find(o => o.id === params.id)
     setOrder(found || null)
-  }, [params.id])
+
+    // Clear ordered products from cart
+    if (found) {
+      const orderedProductIds = found.items.map(item => item.productId)
+      removeOrderedItems(orderedProductIds)
+    }
+  }, [params.id, removeOrderedItems])
 
   if (!order) {
     return (

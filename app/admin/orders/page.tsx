@@ -13,6 +13,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([])
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<Order['status'] | 'all'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('admin_logged_in')
@@ -36,9 +37,14 @@ export default function AdminOrders() {
     router.push('/admin')
   }
 
-  const filteredOrders = filterStatus === 'all'
-    ? orders
-    : orders.filter(o => o.status === filterStatus)
+  const filteredOrders = orders.filter(order => {
+    const statusMatch = filterStatus === 'all' || order.status === filterStatus
+    const searchMatch = searchQuery === '' || 
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+    return statusMatch && searchMatch
+  })
 
   const statusColors: Record<Order['status'], string> = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -96,24 +102,36 @@ export default function AdminOrders() {
       <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="font-heading text-3xl font-bold mb-8">Orders</h2>
 
-        {/* Filter */}
-        <div className="mb-6 flex gap-4">
+        {/* Search and Filter */}
+        <div className="mb-6 space-y-4">
           <div>
-            <label className="text-sm font-medium mr-2">Filter by Status:</label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as Order['status'] | 'all')}
-              className="px-4 py-2 border border-border bg-background text-foreground"
-            >
-              <option value="all">All Orders</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-            </select>
+            <label className="text-sm font-medium mb-2 block">Search Orders</label>
+            <input
+              type="text"
+              placeholder="Search by Order ID, Customer Name, or Email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+            />
           </div>
-          <div className="text-sm text-muted-foreground">
-            {filteredOrders.length} orders
+          <div className="flex gap-4 items-center">
+            <div>
+              <label className="text-sm font-medium mr-2">Filter by Status:</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as Order['status'] | 'all')}
+                className="px-4 py-2 border border-border bg-background text-foreground"
+              >
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+              </select>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {filteredOrders.length} of {orders.length} orders
+            </div>
           </div>
         </div>
 
