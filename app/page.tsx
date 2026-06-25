@@ -6,14 +6,8 @@ import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import HeroCarousel from '@/components/HeroCarousel'
-import ProductShowcase from '@/components/ProductShowcase'
-import TestimonialSection from '@/components/TestimonialSection'
-import FAQSection from '@/components/FAQSection'
-import TrustBadges from '@/components/TrustBadges'
-import FeaturedCollections from '@/components/FeaturedCollections'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import PromoBanner from '@/components/PromoBanner'
-import RecentlyViewed from '@/components/RecentlyViewed'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
@@ -40,59 +34,37 @@ export default function Home() {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section with Carousel */}
+        {/* Hero Section */}
         <HeroCarousel />
 
-        {/* New Arrivals Showcase */}
-        <ProductShowcase
-          title="New Arrivals"
-          description="Discover our latest collection with fresh designs and premium materials"
-          products={products.filter(p => p.badge === 'new')}
-          badge="new"
-          showCount={8}
-        />
+        {/* Category Banners */}
+        <section className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Jewellery Banner */}
+            <Link href="/products?category=jewellery" className="group relative overflow-hidden rounded-lg h-96 bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center hover:shadow-lg transition-all duration-300">
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300" />
+              <div className="relative z-10 text-center px-6">
+                <h2 className="font-heading text-5xl font-bold text-foreground mb-3">Jewellery</h2>
+                <p className="text-muted-foreground text-lg mb-6">Elegant pieces crafted with precision</p>
+                <div className="inline-block bg-foreground text-background px-8 py-3 font-semibold hover:bg-accent transition-colors">
+                  Explore Collection
+                </div>
+              </div>
+            </Link>
 
-        {/* Best Sellers Showcase */}
-        <ProductShowcase
-          title="Best Sellers"
-          description="Customer favorites that consistently deliver excellence"
-          products={products.filter(p => p.badge === 'bestseller' || p.reviewCount! > 20).sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))}
-          badge="bestseller"
-          showCount={8}
-        />
-
-        {/* Flash Deals Section */}
-        <ProductShowcase
-          title="Flash Deals"
-          description="Limited time offers on selected premium items"
-          products={products.filter(p => p.badge === 'sale' || p.originalPrice)}
-          badge="sale"
-          showCount={8}
-        />
-
-        {/* Trending Section */}
-        <ProductShowcase
-          title="Trending Now"
-          description="The hottest items everyone is talking about"
-          products={products.filter(p => p.badge === 'trending' || p.rating! >= 4.7).sort((a, b) => (b.rating || 0) - (a.rating || 0))}
-          badge="trending"
-          showCount={8}
-        />
-
-        {/* Recently Viewed Section */}
-        <RecentlyViewed />
-
-        {/* Trust Badges */}
-        <TrustBadges />
-
-        {/* Featured Collections */}
-        <FeaturedCollections />
-
-        {/* Testimonials */}
-        <TestimonialSection />
-
-        {/* FAQ */}
-        <FAQSection />
+            {/* Clothes Banner */}
+            <Link href="/products?category=clothes" className="group relative overflow-hidden rounded-lg h-96 bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center hover:shadow-lg transition-all duration-300">
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300" />
+              <div className="relative z-10 text-center px-6">
+                <h2 className="font-heading text-5xl font-bold text-foreground mb-3">Clothes</h2>
+                <p className="text-muted-foreground text-lg mb-6">Contemporary styles for modern living</p>
+                <div className="inline-block bg-foreground text-background px-8 py-3 font-semibold hover:bg-accent transition-colors">
+                  Explore Collection
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
 
         {/* Newsletter Signup */}
         <NewsletterSignup />
