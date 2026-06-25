@@ -9,9 +9,10 @@ export default function ScrollProgressBar() {
   const pathname = usePathname()
 
   useEffect(() => {
-    // Hide on auth pages and small scroll areas
+    // Hide on auth pages and admin pages
     const isAuthPage = pathname?.includes('/auth/')
-    setShowBar(!isAuthPage)
+    const isAdminPage = pathname?.includes('/admin/')
+    setShowBar(!isAuthPage && !isAdminPage)
   }, [pathname])
 
   useEffect(() => {

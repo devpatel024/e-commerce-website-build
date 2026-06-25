@@ -17,7 +17,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between h-20 transition-smooth">
           {/* Logo */}
@@ -25,34 +25,8 @@ export default function Header() {
             <div className="text-2xl font-bold tracking-wider font-heading group-hover:text-accent transition-colors">LUXE</div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8 flex-1 px-8">
-            <Link
-              href="/"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Home
-            </Link>
-            <Link
-              href="/products"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Shop
-            </Link>
-            <Link
-              href="/products?category=jewellery"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Jewellery
-            </Link>
-            <Link
-              href="/products?category=clothes"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Clothes
-            </Link>
-            <SearchBar />
-          </div>
+          {/* Desktop Navigation - Hidden on mobile */}
+          <div className="hidden lg:flex items-center flex-1 px-8" />
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
@@ -158,6 +132,38 @@ export default function Header() {
             )}
           </div>
         )}
+
+        {/* Category Chips Navigation - Below main nav */}
+        <div className="hidden md:flex items-center gap-3 pb-4 overflow-x-auto scrollbar-hide">
+          <Link
+            href="/products"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            All Products
+          </Link>
+          <Link
+            href="/products?category=jewellery"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            Jewellery
+          </Link>
+          <Link
+            href="/products?category=clothes"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            Clothes
+          </Link>
+          <Link
+            href="/products?badge=new"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            New Arrivals
+          </Link>
+          <div className="flex-1 md:flex items-center gap-3 hidden">
+            <div className="w-px h-6 bg-border" />
+            <SearchBar />
+          </div>
+        </div>
       </div>
     </header>
   )
