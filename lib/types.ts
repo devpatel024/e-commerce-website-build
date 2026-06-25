@@ -47,6 +47,11 @@ export interface CartItem {
   variant?: string
 }
 
+export interface GiftWrapping {
+  type: 'none' | 'basic' | 'premium'
+  cost: number
+}
+
 export interface Order {
   id: string
   createdAt: string
@@ -63,6 +68,12 @@ export interface Order {
   paymentStatus?: 'pending' | 'completed' | 'failed'
   stripeSessionId?: string
   stripePaymentIntentId?: string
+  userId?: string
+  isGuest?: boolean
+  couponCode?: string
+  discount?: number
+  giftWrapping?: GiftWrapping
+  giftNote?: string
 }
 
 export interface OrderItem {

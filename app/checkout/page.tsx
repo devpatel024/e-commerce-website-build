@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { getCart, clearCart, getProductById, saveOrder, initializeStorage } from '@/lib/storage'
+import { getCart, clearCart, getProductById, saveOrder, initializeStorage, validateCoupon, calculateDiscount, getCouponByCode } from '@/lib/storage'
 import { CartItem, Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
 import { useAuthContext } from '@/components/AuthProvider'
+import { useCart } from '@/context/CartContext'
+import { useAddresses } from '@/context/AddressContext'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 
@@ -16,8 +18,12 @@ function CheckoutPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isLoading: authLoading } = useAuthContext()
+  const { clearCart: clearCartContext } = useCart()
+  const { addresses, getDefaultAddress } = useAddresses()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState<'manual'>('manual')
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,30 +36,44 @@ function CheckoutPageContent() {
   })
   const [isProcessing, setIsProcessing] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
-  const [showAuthRedirect, setShowAuthRedirect] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [couponError, setCouponError] = useState('')
+  const [giftWrapType, setGiftWrapType] = useState<'none' | 'basic' | 'premium'>('none')
+  const [giftNote, setGiftNote] = useState('')
+
+  const GIFT_WRAP_COSTS = { none: 0, basic: 5, premium: 15 }
 
   useEffect(() => {
-    // Check auth status - redirect to login if not authenticated
-    if (!authLoading && !user) {
-      setShowAuthRedirect(true)
-      const timer = setTimeout(() => {
-        router.push(`/auth/login?returnTo=${encodeURIComponent('/checkout')}`)
-      }, 500) // Small delay to show loading state
-      return () => clearTimeout(timer)
-    }
-  }, [user, authLoading, router])
-
-  useEffect(() => {
-    if (!user) return // Don't load cart until auth is verified
-
+    // Load cart regardless of auth status - support guest checkout
     initializeStorage()
     const items = getCart()
-    if (items.length === 0) {
+    if (items.length === 0 && !authLoading) {
       router.push('/cart')
       return
     }
     setCartItems(items)
-  }, [user, router])
+
+    // If user is logged in, pre-fill email and default address
+    if (user && !isGuestCheckout) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email,
+        name: user.name || '',
+      }))
+      const defaultAddr = getDefaultAddress()
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id)
+        setFormData(prev => ({
+          ...prev,
+          name: defaultAddr.name,
+          address: defaultAddr.street,
+          city: defaultAddr.city,
+          postalCode: defaultAddr.postalCode,
+        }))
+      }
+    }
+  }, [user, authLoading, router, isGuestCheckout, getDefaultAddress])
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -63,13 +83,38 @@ function CheckoutPageContent() {
     }))
   }, [])
 
+  const handleApplyCoupon = useCallback(() => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code')
+      return
+    }
+    const subtotal = cartItems.reduce((sum, item) => {
+      const product = getProductById(item.productId)
+      return sum + (product?.price || 0) * item.quantity
+    }, 0)
+    const result = validateCoupon(couponCode.toUpperCase(), subtotal)
+    if (result.valid && result.coupon) {
+      setAppliedCoupon(result.coupon)
+      setCouponError('')
+    } else {
+      setAppliedCoupon(null)
+      setCouponError(result.error || 'Invalid coupon code')
+    }
+  }, [couponCode, cartItems])
+
   const calculateTotal = useMemo(() => {
     const subtotal = cartItems.reduce((sum, item) => {
       const product = getProductById(item.productId)
       return sum + (product?.price || 0) * item.quantity
     }, 0)
-    return subtotal * 1.1 // Including 10% tax
-  }, [cartItems])
+    const tax = subtotal * 0.1
+    let discount = 0
+    if (appliedCoupon) {
+      discount = calculateDiscount(appliedCoupon, subtotal)
+    }
+    const giftWrapCost = GIFT_WRAP_COSTS[giftWrapType]
+    return Math.max(0, subtotal + tax - discount + giftWrapCost)
+  }, [cartItems, appliedCoupon, giftWrapType])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -113,10 +158,20 @@ function CheckoutPageContent() {
         city: formData.city,
         postalCode: formData.postalCode,
       },
+      userId: user?.id,
+      isGuest: !user,
+      couponCode: appliedCoupon?.code,
+      discount: appliedCoupon ? calculateDiscount(appliedCoupon, cartItems.reduce((sum, item) => {
+        const product = getProductById(item.productId)
+        return sum + (product?.price || 0) * item.quantity
+      }, 0)) : 0,
+      giftWrapping: giftWrapType !== 'none' ? { type: giftWrapType, cost: GIFT_WRAP_COSTS[giftWrapType] } : undefined,
+      giftNote: giftNote || undefined,
     }
 
     saveOrder(order)
     clearCart()
+    clearCartContext()
     // Ensure localStorage is cleared for this user's cart
     localStorage.removeItem('luxe_cart')
     setOrderPlaced(true)
@@ -128,16 +183,14 @@ function CheckoutPageContent() {
     }, 300)
   }
 
-  if (authLoading || showAuthRedirect) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <Loader2 className="w-12 h-12 animate-spin text-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              {showAuthRedirect ? 'Redirecting to login...' : 'Loading checkout...'}
-            </p>
+            <p className="text-muted-foreground">Loading checkout...</p>
           </div>
         </main>
         <Footer />
@@ -198,7 +251,122 @@ function CheckoutPageContent() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Checkout Form */}
             <div>
+              {/* Guest Checkout Toggle */}
+              {!user && (
+                <div className="mb-6 p-4 bg-secondary/50 border border-border">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {isGuestCheckout ? 'Checking out as guest' : 'Have an account?'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGuestCheckout(!isGuestCheckout)
+                      setFormData(prev => ({ ...prev, email: '', name: '' }))
+                    }}
+                    className="text-sm font-medium text-accent hover:text-foreground transition-colors"
+                  >
+                    {isGuestCheckout ? 'Sign in instead' : 'Continue as guest'}
+                  </button>
+                </div>
+              )}
+
+              {/* Login Prompt for Non-Guests */}
+              {!user && !isGuestCheckout && (
+                <div className="mb-6 p-4 bg-secondary/50 border border-border">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Sign in to save your address and track orders
+                  </p>
+                  <Link
+                    href={`/auth/login?returnTo=${encodeURIComponent('/checkout')}`}
+                    className="text-sm font-medium text-accent hover:text-foreground transition-colors"
+                  >
+                    Sign in here →
+                  </Link>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Gift Wrapping & Notes */}
+                <div className="border border-border p-6 bg-secondary/30">
+                  <h2 className="font-semibold text-lg mb-4">Gift Options</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-3">Gift Wrapping</label>
+                      <div className="space-y-2">
+                        {[
+                          { type: 'none' as const, label: 'No Gift Wrapping', cost: 0 },
+                          { type: 'basic' as const, label: 'Basic Gift Wrap (+$5)', cost: 5 },
+                          { type: 'premium' as const, label: 'Premium Gift Wrap (+$15)', cost: 15 },
+                        ].map(option => (
+                          <label key={option.type} className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="giftWrap"
+                              value={option.type}
+                              checked={giftWrapType === option.type}
+                              onChange={() => setGiftWrapType(option.type)}
+                              className="mr-3"
+                            />
+                            <span className="text-sm">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Gift Note (Optional)</label>
+                      <textarea
+                        value={giftNote}
+                        onChange={(e) => setGiftNote(e.target.value.slice(0, 200))}
+                        placeholder="Add a personal message (max 200 characters)"
+                        maxLength={200}
+                        className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground resize-none"
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">{giftNote.length}/200</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Saved Addresses for Logged-in Users */}
+                {user && addresses.length > 0 && (
+                  <div className="border border-border p-6 bg-secondary/30">
+                    <h3 className="font-semibold text-sm mb-3">Use Saved Address</h3>
+                    <select
+                      value={selectedAddressId || ''}
+                      onChange={(e) => {
+                        const id = e.target.value
+                        if (id) {
+                          const addr = addresses.find(a => a.id === id)
+                          if (addr) {
+                            setSelectedAddressId(id)
+                            setFormData(prev => ({
+                              ...prev,
+                              name: addr.name,
+                              address: addr.street,
+                              city: addr.city,
+                              postalCode: addr.postalCode,
+                            }))
+                          }
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-border bg-background text-foreground focus:outline-none focus:border-foreground mb-2"
+                    >
+                      <option value="">Select a saved address...</option>
+                      {addresses.map(addr => (
+                        <option key={addr.id} value={addr.id}>
+                          {addr.name} - {addr.street}, {addr.city} {addr.isDefault ? '(Default)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <Link
+                      href="/account/addresses"
+                      className="text-xs font-medium text-accent hover:text-foreground transition-colors"
+                    >
+                      Manage addresses →
+                    </Link>
+                  </div>
+                )}
+
                 {/* Shipping Information */}
                 <div className="border border-border p-6">
                   <h2 className="font-semibold text-lg mb-4">Shipping Information</h2>
@@ -264,6 +432,56 @@ function CheckoutPageContent() {
                           className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
                         />
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coupon Code */}
+                <div className="border border-border p-6 bg-secondary/30">
+                  <h2 className="font-semibold text-lg mb-4">Promo Code</h2>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Coupon Code (Optional)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => {
+                            setCouponCode(e.target.value)
+                            setCouponError('')
+                          }}
+                          placeholder="Enter promo code"
+                          className="flex-1 px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                          disabled={!!appliedCoupon}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={!!appliedCoupon || !couponCode.trim()}
+                          className="px-4 py-2 bg-foreground text-background font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      {couponError && <p className="text-sm text-red-500 mt-2">{couponError}</p>}
+                      {appliedCoupon && (
+                        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
+                          <p className="text-sm font-medium text-green-800">
+                            Coupon Applied: {appliedCoupon.code}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAppliedCoupon(null)
+                              setCouponCode('')
+                              setCouponError('')
+                            }}
+                            className="text-xs text-green-600 hover:text-green-800 mt-1"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -354,6 +572,21 @@ function CheckoutPageContent() {
                     <span className="text-muted-foreground">Tax (10%)</span>
                     <span>{formatPrice(total - total / 1.1)}</span>
                   </div>
+                  {giftWrapType !== 'none' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Gift Wrapping ({giftWrapType === 'basic' ? 'Basic' : 'Premium'})</span>
+                      <span>+{formatPrice(GIFT_WRAP_COSTS[giftWrapType])}</span>
+                    </div>
+                  )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span className="text-muted-foreground">Discount ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `$${appliedCoupon.value}`})</span>
+                      <span>-{formatPrice(calculateDiscount(appliedCoupon, cartItems.reduce((sum, item) => {
+                        const product = getProductById(item.productId)
+                        return sum + (product?.price || 0) * item.quantity
+                      }, 0)))}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-semibold border-t border-border pt-3">
                     <span>Total</span>
                     <span>{formatPrice(total)}</span>

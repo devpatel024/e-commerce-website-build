@@ -14,19 +14,19 @@ interface Slide {
 const heroSlides: Slide[] = [
   {
     id: 1,
-    image: '/hero/slide-1.png',
+    image: '/hero-1.png',
     title: 'Timeless Elegance',
     subtitle: 'Discover exquisite jewelry crafted with precision and passion',
   },
   {
     id: 2,
-    image: '/hero/slide-2.png',
+    image: '/hero-2.png',
     title: 'Premium Fashion',
     subtitle: 'Elevate your style with our luxury apparel collection',
   },
   {
     id: 3,
-    image: '/hero/slide-3.png',
+    image: '/hero-3.png',
     title: 'Pure Luxury',
     subtitle: 'Experience sophistication in every piece',
   },
@@ -121,10 +121,10 @@ export default function HeroCarousel() {
           }`}
           key={currentSlide}
         >
-          <h1 className="text-5xl md:text-8xl font-bold text-white mb-6 tracking-tight font-heading drop-shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight font-heading drop-shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-1000 font-light">
             {slide.title}
           </h1>
-          <p className="text-lg md:text-3xl text-white/95 mb-12 leading-relaxed drop-shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+          <p className="text-sm md:text-lg text-white/80 mb-12 leading-relaxed drop-shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 font-light">
             {slide.subtitle}
           </p>
         </div>

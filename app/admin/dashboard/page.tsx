@@ -9,7 +9,21 @@ import { getOrders, getProducts, initializeStorage } from '@/lib/storage'
 import { Order, Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
 import { calculateDashboardStats, DashboardStats } from '@/lib/analytics'
-import { TrendingUp, Package, Users, ShoppingCart } from 'lucide-react'
+import { RevenueChart } from '@/components/charts/RevenueChart'
+import { CategoryRevenueChart } from '@/components/charts/CategoryRevenueChart'
+import { TopProductsChart } from '@/components/charts/TopProductsChart'
+import { OrderStatusChart } from '@/components/charts/OrderStatusChart'
+import { LowStockWidget } from '@/components/charts/LowStockWidget'
+import {
+  calculateDashboardMetrics,
+  getRevenueTrend,
+  getCategoryRevenue,
+  getTopProducts,
+  getOrderStatusBreakdown,
+  getLowStockProducts,
+  calculatePercentageChange,
+} from '@/lib/dashboard-analytics'
+import { TrendingUp, Package, Users, ShoppingCart, Download } from 'lucide-react'
 
 export default function AdminDashboardPage() {
   const router = useRouter()
@@ -17,6 +31,12 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null)
+  const [revenueTrend, setRevenueTrend] = useState<any[]>([])
+  const [categoryRevenue, setCategoryRevenue] = useState<any[]>([])
+  const [topProducts, setTopProducts] = useState<any[]>([])
+  const [orderStatus, setOrderStatus] = useState<any[]>([])
+  const [lowStockProducts, setLowStockProducts] = useState<any[]>([])
 
   useEffect(() => {
     if (!isLoading && user?.role === 'admin') {
@@ -26,6 +46,13 @@ export default function AdminDashboardPage() {
       setOrders(ordersData)
       setProducts(productsData)
       setStats(calculateDashboardStats(ordersData, productsData))
+      
+      // Calculate new analytics
+      setRevenueTrend(getRevenueTrend(ordersData, 30))
+      setCategoryRevenue(getCategoryRevenue(ordersData, productsData))
+      setTopProducts(getTopProducts(ordersData, productsData, 5))
+      setOrderStatus(getOrderStatusBreakdown(ordersData))
+      setLowStockProducts(getLowStockProducts(productsData, 5))
     }
   }, [user, isLoading])
 
@@ -34,49 +61,41 @@ export default function AdminDashboardPage() {
     router.push('/auth/login')
   }
 
+  const convertToCSV = (data: any): string => {
+    let csv = 'Dashboard Export\n'
+    csv += `Export Date: ${new Date().toLocaleString()}\n\n`
+    csv += 'Metrics Summary\n'
+    csv += `Total Revenue,${stats?.totalRevenue}\n`
+    csv += `Total Orders,${stats?.totalOrders}\n`
+    csv += `Average Order Value,${stats?.averageOrderValue}\n`
+    csv += `Unique Customers,${stats?.totalCustomers}\n\n`
+    
+    csv += 'Top Products\n'
+    csv += 'Product Name,Revenue,Units Sold\n'
+    topProducts.forEach((p: any) => {
+      csv += `${p.name},${p.revenue},${p.units}\n`
+    })
+    
+    return csv
+  }
+
+  const downloadCSV = (csv: string, filename: string) => {
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  }
+
   return (
     <ProtectedRoute requiredRole="admin">
-      <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 className="font-heading text-2xl font-bold">LUXE Admin Panel</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium border border-border hover:bg-secondary transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="border-b border-border bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8">
-          <Link
-            href="/admin/dashboard"
-            className="py-4 px-4 border-b-2 border-foreground font-medium text-sm"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin/products"
-            className="py-4 px-4 border-b-2 border-transparent font-medium text-sm hover:border-foreground"
-          >
-            Products
-          </Link>
-          <Link
-            href="/admin/orders"
-            className="py-4 px-4 border-b-2 border-transparent font-medium text-sm hover:border-foreground"
-          >
-            Orders
-          </Link>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <h2 className="font-heading text-3xl font-bold mb-8">Dashboard Overview</h2>
+      <div>
+        <h1 className="font-heading text-3xl font-bold mb-2">Dashboard Overview</h1>
+        <p className="text-muted-foreground mb-8">Welcome back! Here's a summary of your store performance.</p>
 
         {/* Alert for Pending Orders */}
         {orders.filter(o => o.status === 'pending').length > 0 && (
@@ -146,6 +165,53 @@ export default function AdminDashboardPage() {
               </div>
               <Users className="w-8 h-8 text-purple-600/30" />
             </div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="mb-12">
+          <h2 className="font-heading text-2xl font-bold mb-6">Analytics & Insights</h2>
+          
+          {/* Revenue Trend */}
+          <div className="mb-8">
+            <RevenueChart data={revenueTrend} />
+          </div>
+
+          {/* Category & Status Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <CategoryRevenueChart data={categoryRevenue} />
+            <OrderStatusChart data={orderStatus} />
+          </div>
+
+          {/* Top Products */}
+          <div className="mb-8">
+            <TopProductsChart data={topProducts} />
+          </div>
+
+          {/* Low Stock Widget */}
+          <div className="mb-8">
+            <LowStockWidget products={lowStockProducts} />
+          </div>
+
+          {/* Export Button */}
+          <div className="flex gap-4 mb-8">
+            <button
+              onClick={() => {
+                const data = {
+                  exportedAt: new Date().toISOString(),
+                  metrics: stats,
+                  orders: orders.length,
+                  topProducts,
+                  orderStatus,
+                }
+                const csv = convertToCSV(data)
+                downloadCSV(csv, 'dashboard-export.csv')
+              }}
+              className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded font-semibold text-sm hover:bg-accent/90 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export Dashboard Data
+            </button>
           </div>
         </div>
 
@@ -219,8 +285,7 @@ export default function AdminDashboardPage() {
             <p className="text-sm text-muted-foreground">Manage customer orders and track shipments</p>
           </Link>
         </div>
-      </main>
-    </div>
+      </div>
     </ProtectedRoute>
   )
 }

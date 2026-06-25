@@ -111,8 +111,14 @@ function OrderConfirmationContent() {
         <div className="text-center mb-12">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-4xl font-bold text-foreground mb-2">Order Confirmed!</h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg mb-2">
             Thank you for your purchase. Your order has been received.
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">
+            A confirmation email with your order slip has been sent to <span className="font-semibold text-foreground">{order.customer.email}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Please check your inbox and spam folder. You can track your order from your account page.
           </p>
         </div>
 
