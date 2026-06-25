@@ -1,9 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function ScrollProgressBar() {
   const [progress, setProgress] = useState(0)
+  const [showBar, setShowBar] = useState(true)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    // Hide on auth pages and small scroll areas
+    const isAuthPage = pathname?.includes('/auth/')
+    setShowBar(!isAuthPage)
+  }, [pathname])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +25,8 @@ export default function ScrollProgressBar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  if (!showBar) return null
 
   return (
     <div className="fixed top-20 left-0 right-0 h-1 bg-secondary z-40">

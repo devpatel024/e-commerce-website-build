@@ -52,9 +52,9 @@ export default function Home() {
               <div className="relative z-10 text-center px-6">
                 <h2 className="font-heading text-4xl md:text-5xl font-light text-white mb-2">Jewellery</h2>
                 <p className="text-white/85 text-sm md:text-base mb-6 font-light">Elegant pieces crafted with precision</p>
-                <div className="inline-block bg-white/90 text-foreground px-8 py-3 font-semibold hover:bg-white transition-all duration-300">
+                <button className="inline-block bg-white text-black px-8 py-3 font-semibold hover:bg-accent transition-all duration-300 shadow-lg">
                   Explore Collection
-                </div>
+                </button>
               </div>
             </Link>
 
@@ -70,9 +70,9 @@ export default function Home() {
               <div className="relative z-10 text-center px-6">
                 <h2 className="font-heading text-4xl md:text-5xl font-light text-white mb-2">Clothes</h2>
                 <p className="text-white/85 text-sm md:text-base mb-6 font-light">Contemporary styles for modern living</p>
-                <div className="inline-block bg-white/90 text-foreground px-8 py-3 font-semibold hover:bg-white transition-all duration-300">
+                <button className="inline-block bg-white text-black px-8 py-3 font-semibold hover:bg-accent transition-all duration-300 shadow-lg">
                   Explore Collection
-                </div>
+                </button>
               </div>
             </Link>
           </div>

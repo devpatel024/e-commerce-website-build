@@ -26,7 +26,7 @@ const heroSlides: Slide[] = [
   },
   {
     id: 3,
-    image: '/hero-1.png',
+    image: '/hero-3.png',
     title: 'Pure Luxury',
     subtitle: 'Experience sophistication in every piece',
   },
