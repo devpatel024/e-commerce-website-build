@@ -9,6 +9,7 @@ import { getCart, clearCart, getProductById, saveOrder, initializeStorage } from
 import { CartItem, Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
 import { useAuthContext } from '@/components/AuthProvider'
+import { useCart } from '@/context/CartContext'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 
@@ -16,6 +17,7 @@ function CheckoutPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isLoading: authLoading } = useAuthContext()
+  const { clearCart: clearCartContext } = useCart()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState<'manual'>('manual')
   const [formData, setFormData] = useState({
@@ -117,6 +119,7 @@ function CheckoutPageContent() {
 
     saveOrder(order)
     clearCart()
+    clearCartContext()
     // Ensure localStorage is cleared for this user's cart
     localStorage.removeItem('luxe_cart')
     setOrderPlaced(true)
