@@ -1,15 +1,19 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuthContext } from './AuthProvider'
 import { useCart } from '@/context/CartContext'
+import { useWishlist } from '@/context/WishlistContext'
 import { ShoppingBag, LogOut, Menu, X, User, Heart } from 'lucide-react'
 import { useState } from 'react'
 import SearchBar from './SearchBar'
 
 export default function Header() {
+  const router = useRouter()
   const { user, logout } = useAuthContext()
   const { itemCount } = useCart()
+  const { itemCount: wishlistCount } = useWishlist()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
@@ -30,6 +34,26 @@ export default function Header() {
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
+            {/* Wishlist Icon */}
+            <button
+              onClick={() => {
+                if (!user) {
+                  router.push('/auth/login')
+                } else {
+                  router.push('/wishlist')
+                }
+              }}
+              className="relative p-2 text-muted-foreground transition-colors hover:text-foreground"
+              title="My Wishlist"
+            >
+              <Heart className="w-6 h-6" />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex items-center justify-center rounded-full bg-accent text-accent-foreground w-5 h-5 text-xs font-bold">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
+
             {/* Cart Icon */}
             <Link
               href="/cart"
