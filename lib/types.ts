@@ -63,6 +63,10 @@ export interface Order {
   paymentStatus?: 'pending' | 'completed' | 'failed'
   stripeSessionId?: string
   stripePaymentIntentId?: string
+  userId?: string
+  isGuest?: boolean
+  couponCode?: string
+  discount?: number
 }
 
 export interface OrderItem {

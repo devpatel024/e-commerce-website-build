@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
 import { CartProvider } from '@/context/CartContext'
+import { AddressProvider } from '@/context/AddressContext'
 import PageLoadingBar from '@/components/PageLoadingBar'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -56,9 +57,11 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <PageLoadingBar />
         <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <AddressProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </AddressProvider>
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

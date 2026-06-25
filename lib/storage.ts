@@ -242,6 +242,34 @@ export function getCouponByCode(code: string): Coupon | undefined {
   return coupons.find(c => c.code.toUpperCase() === code.toUpperCase() && c.isActive)
 }
 
+export function validateCoupon(code: string, orderTotal: number): { valid: boolean; coupon?: Coupon; error?: string } {
+  const coupon = getCouponByCode(code)
+  if (!coupon) {
+    return { valid: false, error: 'Coupon code not found' }
+  }
+  if (!coupon.isActive) {
+    return { valid: false, error: 'This coupon is no longer active' }
+  }
+  if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+    return { valid: false, error: 'This coupon has expired' }
+  }
+  if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+    return { valid: false, error: 'This coupon has reached its usage limit' }
+  }
+  if (coupon.minPurchase && orderTotal < coupon.minPurchase) {
+    return { valid: false, error: `Minimum purchase of $${coupon.minPurchase} required` }
+  }
+  return { valid: true, coupon }
+}
+
+export function calculateDiscount(coupon: Coupon, subtotal: number): number {
+  if (coupon.type === 'percentage') {
+    return (subtotal * coupon.value) / 100
+  } else {
+    return coupon.value
+  }
+}
+
 // Back-in-stock alert operations
 export function getBackInStockAlerts(): BackInStockAlert[] {
   if (typeof window !== 'undefined') {
