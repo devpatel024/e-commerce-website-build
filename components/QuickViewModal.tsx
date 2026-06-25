@@ -143,7 +143,7 @@ export default function QuickViewModal({
                 {/* Stock */}
                 <div className="mb-6">
                   {product.stock > 0 ? (
-                    <p className="text-green-600 font-semibold">In Stock</p>
+                    <p className="font-semibold" style={{ color: 'var(--green-primary)' }}>In Stock</p>
                   ) : (
                     <p className="text-red-600 font-semibold">Out of Stock</p>
                   )}

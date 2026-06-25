@@ -77,9 +77,18 @@ export default function Home() {
                 {/* Top Card - New Arrivals */}
                 <Link 
                   href="/products?category=clothes" 
-                  className="group bg-muted hover:bg-muted/80 rounded-2xl p-8 sm:p-10 transition-all duration-300 flex-1 flex flex-col justify-between relative overflow-hidden"
+                  className="group rounded-2xl p-8 sm:p-10 transition-all duration-300 flex-1 flex flex-col justify-between relative overflow-hidden"
+                  style={{
+                    backgroundImage: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%), url(/category-clothes.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center right',
+                    backgroundAttachment: 'fixed',
+                  }}
                 >
-                  <div>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/40 pointer-events-none" />
+                  
+                  <div className="relative z-10">
                     <p className="text-xs font-medium tracking-widest text-foreground/60 uppercase mb-4">New Arrivals</p>
                     <h3 className="text-2xl sm:text-3xl font-serif-display text-foreground mb-2 leading-tight">
                       Fashion Essentials
@@ -90,22 +99,22 @@ export default function Home() {
                   </div>
 
                   {/* Layered Images Background */}
-                  <div className="mt-8 relative h-40 -mx-8 -mb-8 sm:-mx-10 sm:-mb-10">
+                  <div className="mt-8 relative h-40 -mx-8 -mb-8 sm:-mx-10 sm:-mb-10 z-10">
                     <div className="absolute inset-0 flex items-end justify-center gap-4 px-4 sm:px-6">
-                      <div className="relative w-24 h-32 rounded-lg overflow-hidden shadow-lg bg-white">
+                      <div className="relative w-24 h-32 rounded-lg overflow-hidden shadow-lg bg-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
                         <Image
                           src="/category-clothes.png"
                           alt="Fashion"
                           fill
-                          className="object-cover"
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       </div>
-                      <div className="relative w-24 h-32 rounded-lg overflow-hidden shadow-lg bg-white transform translate-y-4">
+                      <div className="relative w-24 h-32 rounded-lg overflow-hidden shadow-lg bg-white transform translate-y-4 hover:shadow-2xl hover:scale-105 hover:translate-y-2 transition-all duration-300">
                         <Image
                           src="/category-jewellery.png"
                           alt="Collection"
                           fill
-                          className="object-cover"
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       </div>
                     </div>

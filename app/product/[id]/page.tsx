@@ -177,7 +177,7 @@ export default function ProductDetail() {
               {/* Stock Status */}
               <div className="mb-6">
                 {product.stock > 0 ? (
-                  <p className="text-sm text-green-600 font-semibold">In Stock ({product.stock} available)</p>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--green-primary)' }}>In Stock ({product.stock} available)</p>
                 ) : (
                   <p className="text-sm text-destructive font-semibold">Out of Stock</p>
                 )}

@@ -28,7 +28,7 @@ export default function ProductShowcase({
       case 'new':
         return <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">NEW</span>
       case 'bestseller':
-        return <span className="px-2 py-1 bg-green-600 text-white text-xs font-bold rounded-full">BESTSELLER</span>
+        return <span className="px-2 py-1 text-white text-xs font-bold rounded-full" style={{ backgroundColor: 'var(--green-primary)' }}>BESTSELLER</span>
       case 'sale':
         return <span className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-full">SALE</span>
       case 'trending':

@@ -41,10 +41,6 @@ export default function AdminOrderDetail() {
     }
   }
 
-  if (!typeof window) {
-    return null
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -58,6 +54,7 @@ export default function AdminOrderDetail() {
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
+          <p className="text-muted-foreground mb-6">The order ID provided does not match any order in the system.</p>
           <Link
             href="/admin/orders"
             className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 rounded-lg font-semibold hover:bg-accent transition-colors"

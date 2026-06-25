@@ -30,9 +30,9 @@ export default function ScrollProgressBar() {
   if (!showBar) return null
 
   return (
-    <div className="fixed top-20 left-0 right-0 h-1 bg-secondary z-40">
+    <div className="fixed top-0 left-0 right-0 h-2 bg-transparent z-50 pointer-events-none">
       <div
-        className="h-full bg-foreground transition-all duration-300 ease-out"
+        className="h-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-400 transition-all duration-300 ease-out shadow-lg shadow-green-500/50 animate-progress-glow"
         style={{ width: `${progress}%` }}
       />
     </div>

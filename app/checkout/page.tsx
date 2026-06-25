@@ -465,8 +465,8 @@ function CheckoutPageContent() {
                       </div>
                       {couponError && <p className="text-sm text-red-500 mt-2">{couponError}</p>}
                       {appliedCoupon && (
-                        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
-                          <p className="text-sm font-medium text-green-800">
+                        <div className="mt-3 p-2 rounded" style={{ backgroundColor: 'var(--green-light, #86efac)', opacity: 0.2, borderColor: 'var(--green-primary, #22c55e)', borderWidth: '1px' }}>
+                          <p className="text-sm font-medium" style={{ color: 'var(--green-dark, #16a34a)' }}>
                             Coupon Applied: {appliedCoupon.code}
                           </p>
                           <button
@@ -476,7 +476,8 @@ function CheckoutPageContent() {
                               setCouponCode('')
                               setCouponError('')
                             }}
-                            className="text-xs text-green-600 hover:text-green-800 mt-1"
+                            className="text-xs mt-1 hover:opacity-80 transition-opacity"
+                            style={{ color: 'var(--green-primary, #22c55e)' }}
                           >
                             Remove
                           </button>
@@ -579,7 +580,7 @@ function CheckoutPageContent() {
                     </div>
                   )}
                   {appliedCoupon && (
-                    <div className="flex justify-between text-sm text-green-600">
+                    <div className="flex justify-between text-sm" style={{ color: 'var(--green-primary)' }}>
                       <span className="text-muted-foreground">Discount ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `$${appliedCoupon.value}`})</span>
                       <span>-{formatPrice(calculateDiscount(appliedCoupon, cartItems.reduce((sum, item) => {
                         const product = getProductById(item.productId)
