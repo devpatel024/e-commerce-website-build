@@ -33,7 +33,7 @@ export default function ScrollProgressBar() {
     <div 
       className="fixed top-0 left-0 right-0 h-2 z-50 pointer-events-none" 
       style={{ 
-        backgroundColor: 'rgba(255, 255, 255, 0)',
+        backgroundColor: 'var(--accent)',
         color: 'rgba(250, 250, 250, 0)',
         borderColor: '#6B7152',
         borderBottom: '1px solid #6B7152'
@@ -43,7 +43,7 @@ export default function ScrollProgressBar() {
         className="h-full transition-all duration-300 ease-out"
         style={{ 
           width: `${progress}%`,
-          backgroundColor: '#78ff00'
+          backgroundColor: '#6B7152'
         }}
       />
     </div>
