@@ -137,9 +137,9 @@ export default function AdminDashboardPage() {
               <div>
                 <p className="text-muted-foreground text-sm mb-2">Total Revenue</p>
                 <p className="font-heading text-3xl font-bold">{formatPrice(stats?.totalRevenue || 0)}</p>
-                <p className="text-xs text-green-600 mt-2">+{(stats?.totalRevenue || 0).toFixed(0)} from orders</p>
+                <p className="text-xs mt-2" style={{ color: 'var(--green-primary)' }}>+{(stats?.totalRevenue || 0).toFixed(0)} from orders</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-green-600/30" />
+              <TrendingUp className="w-8 h-8" style={{ color: 'var(--green-primary)', opacity: 0.3 }} />
             </div>
           </div>
 

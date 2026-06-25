@@ -24,8 +24,11 @@ export default function MetricCard({ title, value, trend, icon }: MetricCardProp
       {trend && (
         <div
           className={`flex items-center gap-1 text-sm font-medium ${
-            trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
+            trend.direction === 'up' ? 'text-[--green-primary]' : 'text-red-600'
           }`}
+          style={{
+            color: trend.direction === 'up' ? 'var(--green-primary)' : undefined,
+          }}
         >
           {trend.direction === 'up' ? (
             <TrendingUp className="w-4 h-4" />

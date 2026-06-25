@@ -137,7 +137,7 @@ export default function WishlistPage() {
                   {/* Stock Status */}
                   <div className="mb-4">
                     {product.stock > 0 ? (
-                      <p className="text-xs text-green-600 font-semibold">In Stock ({product.stock})</p>
+                      <p className="text-xs font-semibold" style={{ color: 'var(--green-primary)' }}>In Stock ({product.stock})</p>
                     ) : (
                       <p className="text-xs text-destructive font-semibold">Out of Stock</p>
                     )}

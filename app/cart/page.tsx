@@ -140,7 +140,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span className="text-green-600 font-medium">Free</span>
+                    <span className="font-medium" style={{ color: 'var(--green-primary)' }}>Free</span>
                   </div>
                 </div>
 
