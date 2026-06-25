@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { CartProvider } from '@/context/CartContext'
 import { AddressProvider } from '@/context/AddressContext'
 import PageLoadingBar from '@/components/PageLoadingBar'
+import ScrollProgressBar from '@/components/ScrollProgressBar'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -56,6 +57,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} bg-background`}>
       <body className="font-sans antialiased">
         <PageLoadingBar />
+        <ScrollProgressBar />
         <AuthProvider>
           <AddressProvider>
             <CartProvider>
