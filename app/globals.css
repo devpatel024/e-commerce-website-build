@@ -680,26 +680,6 @@
     color: color-mix(in srgb, var(--foreground) 60%, transparent);
   }
 
-  /* Link underline animation */
-  a {
-    position: relative;
-  }
-
-  a:not(.no-underline)::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: currentColor;
-    transition: width 0.3s ease-out;
-  }
-
-  a:not(.no-underline):hover::after {
-    width: 100%;
-  }
-
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;
@@ -713,10 +693,6 @@
   ::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--muted);
   }
 
   /* Hide scrollbar for specific elements */
