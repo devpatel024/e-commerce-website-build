@@ -21,7 +21,7 @@ export default function PromoBanner({
   if (!isOpen) return null
 
   return (
-    <div className="bg-background animate-slide-down">
+    <div className="bg-background animate-slide-down" style={{ visibility: 'hidden' }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
