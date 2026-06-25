@@ -36,47 +36,9 @@ export default function AdminDashboardPage() {
 
   return (
     <ProtectedRoute requiredRole="admin">
-      <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 className="font-heading text-2xl font-bold">LUXE Admin Panel</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium border border-border hover:bg-secondary transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="border-b border-border bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8">
-          <Link
-            href="/admin/dashboard"
-            className="py-4 px-4 border-b-2 border-foreground font-medium text-sm"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin/products"
-            className="py-4 px-4 border-b-2 border-transparent font-medium text-sm hover:border-foreground"
-          >
-            Products
-          </Link>
-          <Link
-            href="/admin/orders"
-            className="py-4 px-4 border-b-2 border-transparent font-medium text-sm hover:border-foreground"
-          >
-            Orders
-          </Link>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <h2 className="font-heading text-3xl font-bold mb-8">Dashboard Overview</h2>
+      <div>
+        <h1 className="font-heading text-3xl font-bold mb-2">Dashboard Overview</h1>
+        <p className="text-muted-foreground mb-8">Welcome back! Here's a summary of your store performance.</p>
 
         {/* Alert for Pending Orders */}
         {orders.filter(o => o.status === 'pending').length > 0 && (
@@ -219,8 +181,7 @@ export default function AdminDashboardPage() {
             <p className="text-sm text-muted-foreground">Manage customer orders and track shipments</p>
           </Link>
         </div>
-      </main>
-    </div>
+      </div>
     </ProtectedRoute>
   )
 }

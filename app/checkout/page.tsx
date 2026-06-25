@@ -39,6 +39,10 @@ function CheckoutPageContent() {
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
   const [couponError, setCouponError] = useState('')
+  const [giftWrapType, setGiftWrapType] = useState<'none' | 'basic' | 'premium'>('none')
+  const [giftNote, setGiftNote] = useState('')
+
+  const GIFT_WRAP_COSTS = { none: 0, basic: 5, premium: 15 }
 
   useEffect(() => {
     // Load cart regardless of auth status - support guest checkout
@@ -108,8 +112,9 @@ function CheckoutPageContent() {
     if (appliedCoupon) {
       discount = calculateDiscount(appliedCoupon, subtotal)
     }
-    return Math.max(0, subtotal + tax - discount)
-  }, [cartItems, appliedCoupon])
+    const giftWrapCost = GIFT_WRAP_COSTS[giftWrapType]
+    return Math.max(0, subtotal + tax - discount + giftWrapCost)
+  }, [cartItems, appliedCoupon, giftWrapType])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -160,6 +165,8 @@ function CheckoutPageContent() {
         const product = getProductById(item.productId)
         return sum + (product?.price || 0) * item.quantity
       }, 0)) : 0,
+      giftWrapping: giftWrapType !== 'none' ? { type: giftWrapType, cost: GIFT_WRAP_COSTS[giftWrapType] } : undefined,
+      giftNote: giftNote || undefined,
     }
 
     saveOrder(order)
@@ -279,6 +286,47 @@ function CheckoutPageContent() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Gift Wrapping & Notes */}
+                <div className="border border-border p-6 bg-secondary/30">
+                  <h2 className="font-semibold text-lg mb-4">Gift Options</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-3">Gift Wrapping</label>
+                      <div className="space-y-2">
+                        {[
+                          { type: 'none' as const, label: 'No Gift Wrapping', cost: 0 },
+                          { type: 'basic' as const, label: 'Basic Gift Wrap (+$5)', cost: 5 },
+                          { type: 'premium' as const, label: 'Premium Gift Wrap (+$15)', cost: 15 },
+                        ].map(option => (
+                          <label key={option.type} className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="giftWrap"
+                              value={option.type}
+                              checked={giftWrapType === option.type}
+                              onChange={() => setGiftWrapType(option.type)}
+                              className="mr-3"
+                            />
+                            <span className="text-sm">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Gift Note (Optional)</label>
+                      <textarea
+                        value={giftNote}
+                        onChange={(e) => setGiftNote(e.target.value.slice(0, 200))}
+                        placeholder="Add a personal message (max 200 characters)"
+                        maxLength={200}
+                        className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground resize-none"
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">{giftNote.length}/200</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Saved Addresses for Logged-in Users */}
                 {user && addresses.length > 0 && (
                   <div className="border border-border p-6 bg-secondary/30">
@@ -524,6 +572,12 @@ function CheckoutPageContent() {
                     <span className="text-muted-foreground">Tax (10%)</span>
                     <span>{formatPrice(total - total / 1.1)}</span>
                   </div>
+                  {giftWrapType !== 'none' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Gift Wrapping ({giftWrapType === 'basic' ? 'Basic' : 'Premium'})</span>
+                      <span>+{formatPrice(GIFT_WRAP_COSTS[giftWrapType])}</span>
+                    </div>
+                  )}
                   {appliedCoupon && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span className="text-muted-foreground">Discount ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `$${appliedCoupon.value}`})</span>
