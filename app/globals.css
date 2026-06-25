@@ -169,7 +169,91 @@
 }
 
 @layer utilities {
-  /* Modern Animations */
+  /* Modern Animations - Page Transitions */
+  @keyframes page-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes page-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Scroll Animation */
+  @keyframes scroll-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Product Card Hover */
+  @keyframes card-hover {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.02);
+    }
+  }
+
+  /* Image Fade In */
+  @keyframes image-fade-in {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  /* Wishlist Heart Pulse */
+  @keyframes heart-pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Cart Item Pop */
+  @keyframes item-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Fade In */
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -466,5 +550,102 @@
 
   main {
     animation: page-enter 0.3s ease-out;
+  }
+
+  /* Button smooth transitions */
+  button, [role="button"] {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  button:hover:not(:disabled), [role="button"]:hover:not([aria-disabled="true"]) {
+    @apply scale-105;
+  }
+
+  button:active:not(:disabled), [role="button"]:active:not([aria-disabled="true"]) {
+    @apply scale-95;
+  }
+
+  button:disabled, [role="button"][aria-disabled="true"] {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* Form input focus transitions */
+  input, textarea, select {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-accent/50;
+  }
+
+  /* Smooth checkbox/radio transitions */
+  input[type="checkbox"], input[type="radio"] {
+    @apply transition-all duration-150;
+  }
+
+  input[type="checkbox"]:checked, input[type="radio"]:checked {
+    @apply scale-110;
+  }
+
+  /* Anchor smooth transitions */
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  /* Loading state animations */
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Delay utilities for staggered animations */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  /* Slide down animation for dropdowns */
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.2s ease-out;
+  }
+
+  /* Fade out for removal animations */
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .animate-fade-out {
+    animation: fade-out 0.2s ease-out forwards;
   }
 }
