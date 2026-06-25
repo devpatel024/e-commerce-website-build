@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { Menu, X, LayoutDashboard, Box, Truck, Users, Tag, BarChart3, Settings, Upload } from 'lucide-react'
 
 const ADMIN_LINKS = [
-  { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/products', icon: Box, label: 'Products' },
   { href: '/admin/orders', icon: Truck, label: 'Orders' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
@@ -41,7 +41,7 @@ export default function AdminSidebar() {
       >
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-border">
-          <Link href="/admin" className="font-heading text-lg font-bold">
+          <Link href="/admin/dashboard" className="font-heading text-lg font-bold">
             LUXE Admin
           </Link>
         </div>

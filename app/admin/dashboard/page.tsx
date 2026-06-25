@@ -40,21 +40,42 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!isLoading && user?.role === 'admin') {
+      fetchDashboardData()
+    }
+  }, [user, isLoading])
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch orders from database API
+      const ordersResponse = await fetch('/api/admin/orders')
+      const ordersData = ordersResponse.ok ? await ordersResponse.json() : { data: [] }
+      const ordersFromDB = ordersData.data || []
+
+      // Fetch products from storage (or API if available)
+      initializeStorage()
+      const productsData = getProducts()
+      
+      setOrders(ordersFromDB)
+      setProducts(productsData)
+      setStats(calculateDashboardStats(ordersFromDB, productsData))
+      
+      // Calculate new analytics
+      setRevenueTrend(getRevenueTrend(ordersFromDB, 30))
+      setCategoryRevenue(getCategoryRevenue(ordersFromDB, productsData))
+      setTopProducts(getTopProducts(ordersFromDB, productsData, 5))
+      setOrderStatus(getOrderStatusBreakdown(ordersFromDB))
+      setLowStockProducts(getLowStockProducts(productsData, 5))
+    } catch (error) {
+      console.error('[v0] Error fetching dashboard data:', error)
+      // Fallback to localStorage
       initializeStorage()
       const ordersData = getOrders()
       const productsData = getProducts()
       setOrders(ordersData)
       setProducts(productsData)
       setStats(calculateDashboardStats(ordersData, productsData))
-      
-      // Calculate new analytics
-      setRevenueTrend(getRevenueTrend(ordersData, 30))
-      setCategoryRevenue(getCategoryRevenue(ordersData, productsData))
-      setTopProducts(getTopProducts(ordersData, productsData, 5))
-      setOrderStatus(getOrderStatusBreakdown(ordersData))
-      setLowStockProducts(getLowStockProducts(productsData, 5))
     }
-  }, [user, isLoading])
+  }
 
   const handleLogout = () => {
     logout()

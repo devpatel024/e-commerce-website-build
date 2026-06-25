@@ -5,6 +5,7 @@ import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
 import { CartProvider } from '@/context/CartContext'
 import { AddressProvider } from '@/context/AddressContext'
+import { WishlistProvider } from '@/context/WishlistContext'
 import PageLoadingBar from '@/components/PageLoadingBar'
 import ScrollProgressBar from '@/components/ScrollProgressBar'
 
@@ -68,7 +69,9 @@ export default function RootLayout({
         <AuthProvider>
           <AddressProvider>
             <CartProvider>
-              {children}
+              <WishlistProvider>
+                {children}
+              </WishlistProvider>
             </CartProvider>
           </AddressProvider>
         </AuthProvider>
