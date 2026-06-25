@@ -37,7 +37,7 @@ export default function Header() {
               href="/products"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Shop All
+              Shop
             </Link>
             <Link
               href="/products?category=jewellery"
@@ -129,7 +129,7 @@ export default function Header() {
               className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Shop All
+              Shop
             </Link>
             <Link
               href="/products?category=jewellery"
