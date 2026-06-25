@@ -64,6 +64,7 @@ export interface Order {
     address: string
     city: string
     postalCode: string
+    country?: string
   }
   paymentStatus?: 'pending' | 'completed' | 'failed'
   stripeSessionId?: string

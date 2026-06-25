@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrders, saveOrder } from '@/lib/storage'
 import { Order, OrderItem } from '@/lib/types'
+import { db } from '@/lib/db'
+import { order as orderTable } from '@/lib/db/schema'
 
 export const runtime = 'nodejs'
 
@@ -72,11 +74,13 @@ async function handleCreateSession(data: any) {
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout`,
       customer_email: customer.email,
       metadata: {
+        userId: customer.userId || 'guest',
         customerName: customer.name,
         customerEmail: customer.email,
-        customerAddress: customer.address,
-        customerCity: customer.city,
-        customerPostalCode: customer.postalCode,
+        address: customer.address,
+        city: customer.city,
+        postalCode: customer.postalCode,
+        country: customer.country || 'US',
       },
     })
 
@@ -130,21 +134,47 @@ async function handleWebhook(data: any) {
       customer: {
         name: (session.metadata?.customerName as string) || 'Customer',
         email: session.customer_email || (session.metadata?.customerEmail as string) || '',
-        address: (session.metadata?.customerAddress as string) || '',
-        city: (session.metadata?.customerCity as string) || '',
-        postalCode: (session.metadata?.customerPostalCode as string) || '',
+        address: (session.metadata?.address as string) || (session.metadata?.customerAddress as string) || '',
+        city: (session.metadata?.city as string) || (session.metadata?.customerCity as string) || '',
+        postalCode: (session.metadata?.postalCode as string) || (session.metadata?.customerPostalCode as string) || '',
+        country: (session.metadata?.country as string) || 'US',
       },
       paymentStatus: 'completed',
       stripeSessionId: session.id,
       stripePaymentIntentId: session.payment_intent as string,
     }
 
-    // Save order to storage
+    // Save order to BOTH storage (for backward compatibility) AND database
     saveOrder(order)
+
+    // Also save to database for admin panel
+    try {
+      const dbOrder = await db
+        .insert(orderTable)
+        .values({
+          userId: (session.metadata?.userId as string) || 'guest',
+          status: 'pending',
+          items: JSON.stringify(orderItems),
+          subtotal: ((total * 100 - (session.metadata?.tax || 0)) / 100).toFixed(2),
+          total: total.toFixed(2),
+          customerName: (session.metadata?.customerName as string) || 'Customer',
+          customerEmail: session.customer_email || (session.metadata?.customerEmail as string) || '',
+          address: (session.metadata?.address as string) || (session.metadata?.customerAddress as string) || '',
+          city: (session.metadata?.city as string) || (session.metadata?.customerCity as string) || '',
+          postalCode: (session.metadata?.postalCode as string) || (session.metadata?.customerPostalCode as string) || '',
+          country: (session.metadata?.country as string) || 'US',
+        })
+        .returning()
+      console.log('[v0] Order created in database:', dbOrder[0].id)
+    } catch (dbError) {
+      console.error('[v0] Failed to save order to database:', dbError)
+      // Continue even if DB save fails - we have localStorage backup
+    }
 
     console.log('[v0] Order created from Stripe webhook:', order.id)
     return NextResponse.json({ success: true, orderId: order.id })
   } catch (error: any) {
+    console.error('[v0] Webhook processing error:', error)
     return NextResponse.json(
       { error: error.message || 'Webhook processing failed' },
       { status: 500 }
