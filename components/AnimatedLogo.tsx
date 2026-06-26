@@ -4,11 +4,11 @@ interface LogoProps {
   size?: 'small' | 'medium' | 'large'
 }
 
-export default function AnimatedLogo({ size = 'small' }: LogoProps) {
+export default function AnimatedLogo({ size = 'medium' }: LogoProps) {
   const sizeMap = {
-    small: { width: 48, height: 48, viewBox: '0 0 48 48' },
+    small: { width: 48, height: 48, viewBox: '0 0 64 64' },
     medium: { width: 64, height: 64, viewBox: '0 0 64 64' },
-    large: { width: 96, height: 96, viewBox: '0 0 96 96' },
+    large: { width: 96, height: 96, viewBox: '0 0 64 64' },
   }
 
   const config = sizeMap[size]
@@ -22,35 +22,41 @@ export default function AnimatedLogo({ size = 'small' }: LogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       className="hover:opacity-80 transition-opacity duration-300"
     >
+      {/* Rounded Square Background */}
+      <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="#8A5F41" />
+      
+      {/* Decorative corner accents */}
+      <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="url(#bgGradient)" opacity="0.15" />
+
       <defs>
-        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8A5F41" />
-          <stop offset="100%" stopColor="#CCD67F" />
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#CCD67F" />
+          <stop offset="100%" stopColor="#A77F60" />
         </linearGradient>
       </defs>
 
-      {/* Letter A */}
+      {/* Letter A - Modern geometric style */}
       <g>
-        {/* Left diagonal */}
-        <line x1="8" y1="40" x2="16" y2="8" stroke="url(#logoGradient)" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Right diagonal */}
-        <line x1="24" y1="8" x2="32" y2="40" stroke="url(#logoGradient)" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Horizontal bar */}
-        <line x1="10" y1="28" x2="30" y2="28" stroke="url(#logoGradient)" strokeWidth="2.5" strokeLinecap="round" />
+        {/* Left stroke of A */}
+        <path d="M 18 44 L 28 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Right stroke of A */}
+        <path d="M 38 14 L 28 44" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Horizontal bar of A */}
+        <path d="M 20 30 L 36 30" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
       </g>
 
-      {/* Letter D */}
+      {/* Letter D - Overlapped with A */}
       <g>
-        {/* Vertical line */}
-        <line x1="36" y1="8" x2="36" y2="40" stroke="#8A5F41" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Top curve */}
-        <path d="M 36 8 Q 48 8 48 16 Q 48 24 42 24" stroke="#8A5F41" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        {/* Bottom curve */}
-        <path d="M 36 24 Q 48 24 48 32 Q 48 40 36 40" stroke="#8A5F41" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        {/* Vertical line of D */}
+        <path d="M 38 14 L 38 44" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Top curve of D */}
+        <path d="M 38 14 Q 50 14 50 24 Q 50 30 46 30" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        {/* Bottom curve of D */}
+        <path d="M 38 30 Q 50 30 50 40 Q 50 44 38 44" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       </g>
 
-      {/* Accent dot */}
-      <circle cx="20" cy="44" r="1.5" fill="#CCD67F" />
+      {/* Accent highlight */}
+      <circle cx="52" cy="20" r="1.5" fill="#CCD67F" opacity="0.8" />
     </svg>
   )
 }
