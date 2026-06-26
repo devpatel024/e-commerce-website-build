@@ -47,6 +47,11 @@ export interface CartItem {
   variant?: string
 }
 
+export interface GiftWrapping {
+  type: 'none' | 'basic' | 'premium'
+  cost: number
+}
+
 export interface Order {
   id: string
   createdAt: string
@@ -59,7 +64,17 @@ export interface Order {
     address: string
     city: string
     postalCode: string
+    country?: string
   }
+  paymentStatus?: 'pending' | 'completed' | 'failed'
+  stripeSessionId?: string
+  stripePaymentIntentId?: string
+  userId?: string
+  isGuest?: boolean
+  couponCode?: string
+  discount?: number
+  giftWrapping?: GiftWrapping
+  giftNote?: string
 }
 
 export interface OrderItem {
@@ -103,4 +118,76 @@ export interface Address {
   postalCode: string
   country: string
   isDefault: boolean
+}
+
+// Category-specific attributes
+export interface CategoryAttributes {
+  jewelry: {
+    material: string
+    weight?: number
+    certificate?: string
+    diamondCarat?: number
+  }
+  clothes: {
+    size: string
+    color: string
+    fabric?: string
+    care?: string
+  }
+}
+
+// Coupon system
+export interface Coupon {
+  id: string
+  code: string
+  type: 'percentage' | 'fixed'
+  value: number
+  maxUses?: number
+  usedCount: number
+  expiresAt?: string
+  minPurchase?: number
+  applicableCategories?: Category[]
+  isActive: boolean
+  createdAt: string
+}
+
+// Back-in-stock alerts
+export interface BackInStockAlert {
+  id: string
+  productId: string
+  userEmail: string
+  createdAt: string
+  notified: boolean
+  notifiedAt?: string
+}
+
+// Order notifications
+export interface OrderNotification {
+  id: string
+  orderId: string
+  type: 'email' | 'sms' | 'push'
+  status: 'pending' | 'sent' | 'failed'
+  recipient: string
+  message: string
+  sentAt?: string
+  createdAt: string
+}
+
+// Sales analytics
+export interface SalesAnalytics {
+  date: string
+  categoryBreakdown: {
+    category: Category
+    revenue: number
+    unitsSold: number
+  }[]
+  topProducts: {
+    productId: string
+    productName: string
+    unitsSold: number
+    revenue: number
+  }[]
+  totalRevenue: number
+  totalOrders: number
+  averageOrderValue: number
 }

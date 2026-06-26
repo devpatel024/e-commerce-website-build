@@ -1,17 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { getCart, clearCart, getProductById, saveOrder, initializeStorage } from '@/lib/storage'
+import { getCart, clearCart, getProductById, saveOrder, initializeStorage, validateCoupon, calculateDiscount, getCouponByCode } from '@/lib/storage'
 import { CartItem, Order } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
+import { useAuthContext } from '@/components/AuthProvider'
+import { useCart } from '@/context/CartContext'
+import { useAddresses } from '@/context/AddressContext'
+import { Loader2 } from 'lucide-react'
+import { useCallback, useMemo } from 'react'
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, isLoading: authLoading } = useAuthContext()
+  const { clearCart: clearCartContext } = useCart()
+  const { addresses, getDefaultAddress } = useAddresses()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [paymentMethod, setPaymentMethod] = useState<'manual'>('manual')
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,34 +36,87 @@ export default function CheckoutPage() {
   })
   const [isProcessing, setIsProcessing] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [couponError, setCouponError] = useState('')
+  const [giftWrapType, setGiftWrapType] = useState<'none' | 'basic' | 'premium'>('none')
+  const [giftNote, setGiftNote] = useState('')
+
+  const GIFT_WRAP_COSTS = { none: 0, basic: 5, premium: 15 }
 
   useEffect(() => {
+    // Load cart regardless of auth status - support guest checkout
     initializeStorage()
     const items = getCart()
-    if (items.length === 0) {
+    if (items.length === 0 && !authLoading) {
       router.push('/cart')
       return
     }
     setCartItems(items)
-  }, [router])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // If user is logged in, pre-fill email and default address
+    if (user && !isGuestCheckout) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email,
+        name: user.name || '',
+      }))
+      const defaultAddr = getDefaultAddress()
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id)
+        setFormData(prev => ({
+          ...prev,
+          name: defaultAddr.name,
+          address: defaultAddr.street,
+          city: defaultAddr.city,
+          postalCode: defaultAddr.postalCode,
+        }))
+      }
+    }
+  }, [user, authLoading, router, isGuestCheckout, getDefaultAddress])
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }))
-  }
+  }, [])
 
-  const calculateTotal = () => {
+  const handleApplyCoupon = useCallback(() => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code')
+      return
+    }
     const subtotal = cartItems.reduce((sum, item) => {
       const product = getProductById(item.productId)
       return sum + (product?.price || 0) * item.quantity
     }, 0)
-    return subtotal * 1.1 // Including 10% tax
-  }
+    const result = validateCoupon(couponCode.toUpperCase(), subtotal)
+    if (result.valid && result.coupon) {
+      setAppliedCoupon(result.coupon)
+      setCouponError('')
+    } else {
+      setAppliedCoupon(null)
+      setCouponError(result.error || 'Invalid coupon code')
+    }
+  }, [couponCode, cartItems])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const calculateTotal = useMemo(() => {
+    const subtotal = cartItems.reduce((sum, item) => {
+      const product = getProductById(item.productId)
+      return sum + (product?.price || 0) * item.quantity
+    }, 0)
+    const tax = subtotal * 0.1
+    let discount = 0
+    if (appliedCoupon) {
+      discount = calculateDiscount(appliedCoupon, subtotal)
+    }
+    const giftWrapCost = GIFT_WRAP_COSTS[giftWrapType]
+    return Math.max(0, subtotal + tax - discount + giftWrapCost)
+  }, [cartItems, appliedCoupon, giftWrapType])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validate form
@@ -60,59 +125,93 @@ export default function CheckoutPage() {
       return
     }
 
+    setIsProcessing(true)
+
+    // Manual payment validation
     if (!formData.cardNumber || !formData.cardExpiry || !formData.cardCVC) {
       alert('Please fill in all payment details')
+      setIsProcessing(false)
       return
     }
 
-    setIsProcessing(true)
+    // Save order immediately without delay
+    const order: Order = {
+      id: `ORD-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+      items: cartItems.map(item => {
+        const product = getProductById(item.productId)
+        return {
+          productId: item.productId,
+          productName: product?.name || '',
+          quantity: item.quantity,
+          price: product?.price || 0,
+          size: item.size,
+          variant: item.variant,
+        }
+      }),
+      total: calculateTotal,
+      customer: {
+        name: formData.name,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        postalCode: formData.postalCode,
+      },
+      userId: user?.id,
+      isGuest: !user,
+      couponCode: appliedCoupon?.code,
+      discount: appliedCoupon ? calculateDiscount(appliedCoupon, cartItems.reduce((sum, item) => {
+        const product = getProductById(item.productId)
+        return sum + (product?.price || 0) * item.quantity
+      }, 0)) : 0,
+      giftWrapping: giftWrapType !== 'none' ? { type: giftWrapType, cost: GIFT_WRAP_COSTS[giftWrapType] } : undefined,
+      giftNote: giftNote || undefined,
+    }
 
-    // Simulate payment processing
+    saveOrder(order)
+    clearCart()
+    clearCartContext()
+    // Ensure localStorage is cleared for this user's cart
+    localStorage.removeItem('luxe_cart')
+    setOrderPlaced(true)
+    setIsProcessing(false)
+
+    // Quick redirect with minimal delay for UX feedback
     setTimeout(() => {
-      // Create order
-      const order: Order = {
-        id: `ORD-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        items: cartItems.map(item => {
-          const product = getProductById(item.productId)
-          return {
-            productId: item.productId,
-            productName: product?.name || '',
-            quantity: item.quantity,
-            price: product?.price || 0,
-            size: item.size,
-            variant: item.variant,
-          }
-        }),
-        total: calculateTotal(),
-        customer: {
-          name: formData.name,
-          email: formData.email,
-          address: formData.address,
-          city: formData.city,
-          postalCode: formData.postalCode,
-        },
-      }
+      router.push(`/order-confirmation/${order.id}`)
+    }, 300)
+  }
 
-      saveOrder(order)
-      clearCart()
-      setOrderPlaced(true)
-      setIsProcessing(false)
-
-      // Redirect to order confirmation after 2 seconds
-      setTimeout(() => {
-        router.push(`/order-confirmation/${order.id}`)
-      }, 2000)
-    }, 1500)
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading checkout...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   if (cartItems.length === 0 && !orderPlaced) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Your cart is empty</p>
+            <Link
+              href="/products"
+              className="bg-foreground text-background px-6 py-2 font-semibold hover:bg-accent transition-colors"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         </main>
         <Footer />
       </div>
@@ -135,7 +234,7 @@ export default function CheckoutPage() {
     )
   }
 
-  const total = calculateTotal()
+  const total = calculateTotal
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -152,7 +251,122 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Checkout Form */}
             <div>
+              {/* Guest Checkout Toggle */}
+              {!user && (
+                <div className="mb-6 p-4 bg-secondary/50 border border-border">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {isGuestCheckout ? 'Checking out as guest' : 'Have an account?'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGuestCheckout(!isGuestCheckout)
+                      setFormData(prev => ({ ...prev, email: '', name: '' }))
+                    }}
+                    className="text-sm font-medium text-accent hover:text-foreground transition-colors"
+                  >
+                    {isGuestCheckout ? 'Sign in instead' : 'Continue as guest'}
+                  </button>
+                </div>
+              )}
+
+              {/* Login Prompt for Non-Guests */}
+              {!user && !isGuestCheckout && (
+                <div className="mb-6 p-4 bg-secondary/50 border border-border">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Sign in to save your address and track orders
+                  </p>
+                  <Link
+                    href={`/auth/login?returnTo=${encodeURIComponent('/checkout')}`}
+                    className="text-sm font-medium text-accent hover:text-foreground transition-colors"
+                  >
+                    Sign in here →
+                  </Link>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Gift Wrapping & Notes */}
+                <div className="border border-border p-6 bg-secondary/30">
+                  <h2 className="font-semibold text-lg mb-4">Gift Options</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-3">Gift Wrapping</label>
+                      <div className="space-y-2">
+                        {[
+                          { type: 'none' as const, label: 'No Gift Wrapping', cost: 0 },
+                          { type: 'basic' as const, label: 'Basic Gift Wrap (+$5)', cost: 5 },
+                          { type: 'premium' as const, label: 'Premium Gift Wrap (+$15)', cost: 15 },
+                        ].map(option => (
+                          <label key={option.type} className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="giftWrap"
+                              value={option.type}
+                              checked={giftWrapType === option.type}
+                              onChange={() => setGiftWrapType(option.type)}
+                              className="mr-3"
+                            />
+                            <span className="text-sm">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Gift Note (Optional)</label>
+                      <textarea
+                        value={giftNote}
+                        onChange={(e) => setGiftNote(e.target.value.slice(0, 200))}
+                        placeholder="Add a personal message (max 200 characters)"
+                        maxLength={200}
+                        className="w-full px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground resize-none"
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">{giftNote.length}/200</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Saved Addresses for Logged-in Users */}
+                {user && addresses.length > 0 && (
+                  <div className="border border-border p-6 bg-secondary/30">
+                    <h3 className="font-semibold text-sm mb-3">Use Saved Address</h3>
+                    <select
+                      value={selectedAddressId || ''}
+                      onChange={(e) => {
+                        const id = e.target.value
+                        if (id) {
+                          const addr = addresses.find(a => a.id === id)
+                          if (addr) {
+                            setSelectedAddressId(id)
+                            setFormData(prev => ({
+                              ...prev,
+                              name: addr.name,
+                              address: addr.street,
+                              city: addr.city,
+                              postalCode: addr.postalCode,
+                            }))
+                          }
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-border bg-background text-foreground focus:outline-none focus:border-foreground mb-2"
+                    >
+                      <option value="">Select a saved address...</option>
+                      {addresses.map(addr => (
+                        <option key={addr.id} value={addr.id}>
+                          {addr.name} - {addr.street}, {addr.city} {addr.isDefault ? '(Default)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <Link
+                      href="/account/addresses"
+                      className="text-xs font-medium text-accent hover:text-foreground transition-colors"
+                    >
+                      Manage addresses →
+                    </Link>
+                  </div>
+                )}
+
                 {/* Shipping Information */}
                 <div className="border border-border p-6">
                   <h2 className="font-semibold text-lg mb-4">Shipping Information</h2>
@@ -222,9 +436,60 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
+                {/* Coupon Code */}
+                <div className="border border-border p-6 bg-secondary/30">
+                  <h2 className="font-semibold text-lg mb-4">Promo Code</h2>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Coupon Code (Optional)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => {
+                            setCouponCode(e.target.value)
+                            setCouponError('')
+                          }}
+                          placeholder="Enter promo code"
+                          className="flex-1 px-4 py-2 border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                          disabled={!!appliedCoupon}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={!!appliedCoupon || !couponCode.trim()}
+                          className="px-4 py-2 bg-foreground text-background font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      {couponError && <p className="text-sm text-red-500 mt-2">{couponError}</p>}
+                      {appliedCoupon && (
+                        <div className="mt-3 p-2 rounded" style={{ backgroundColor: 'var(--green-light, #86efac)', opacity: 0.2, borderColor: 'var(--green-primary, #22c55e)', borderWidth: '1px' }}>
+                          <p className="text-sm font-medium" style={{ color: 'var(--green-dark, #16a34a)' }}>
+                            Coupon Applied: {appliedCoupon.code}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAppliedCoupon(null)
+                              setCouponCode('')
+                              setCouponError('')
+                            }}
+                            className="text-xs mt-1 hover:opacity-80 transition-opacity"
+                            style={{ color: 'var(--green-primary, #22c55e)' }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Payment Information */}
                 <div className="border border-border p-6">
-                  <h2 className="font-semibold text-lg mb-4">Payment Information</h2>
+                  <h2 className="font-semibold text-lg mb-4">Payment Details</h2>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Card Number</label>
@@ -270,8 +535,9 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full bg-foreground text-background py-3 font-semibold hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-3 font-semibold hover:bg-accent hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isProcessing ? 'Processing...' : `Place Order - ${formatPrice(total)}`}
                 </button>
               </form>
@@ -307,6 +573,21 @@ export default function CheckoutPage() {
                     <span className="text-muted-foreground">Tax (10%)</span>
                     <span>{formatPrice(total - total / 1.1)}</span>
                   </div>
+                  {giftWrapType !== 'none' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Gift Wrapping ({giftWrapType === 'basic' ? 'Basic' : 'Premium'})</span>
+                      <span>+{formatPrice(GIFT_WRAP_COSTS[giftWrapType])}</span>
+                    </div>
+                  )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm" style={{ color: 'var(--green-primary)' }}>
+                      <span className="text-muted-foreground">Discount ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `$${appliedCoupon.value}`})</span>
+                      <span>-{formatPrice(calculateDiscount(appliedCoupon, cartItems.reduce((sum, item) => {
+                        const product = getProductById(item.productId)
+                        return sum + (product?.price || 0) * item.quantity
+                      }, 0)))}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-semibold border-t border-border pt-3">
                     <span>Total</span>
                     <span>{formatPrice(total)}</span>
@@ -320,5 +601,13 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutPageContent />
+    </Suspense>
   )
 }

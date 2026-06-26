@@ -8,7 +8,7 @@ import { useAuthContext } from '@/components/AuthProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { getProducts, deleteProduct, saveProduct, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
-import { X, Plus, Edit2, Trash2, LogOut } from 'lucide-react'
+import { X, Plus, Edit2, Trash2, LogOut, Loader2 } from 'lucide-react'
 import { formatPrice } from '@/lib/price-formatter'
 
 export default function AdminProductsPage() {
@@ -18,6 +18,7 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filterCategory, setFilterCategory] = useState<string>('all')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     price: 0,
@@ -64,21 +65,32 @@ export default function AdminProductsPage() {
       return
     }
 
-    const product: Product = {
-      id: editingId || `prod-${Date.now()}`,
-      name: formData.name,
-      price: formData.price,
-      category: formData.category as 'jewellery' | 'clothes',
-      subcategory: formData.subcategory as string,
-      description: formData.description || '',
-      image: formData.image,
-      stock: formData.stock || 0,
-    }
+    setIsSubmitting(true)
 
-    saveProduct(product)
-    const updated = getProducts()
-    setProducts(updated)
-    resetForm()
+    // Simulate processing delay
+    setTimeout(() => {
+      const validSubcategories = ['rings', 'necklaces', 'earrings', 'bracelets', 'tops', 'bottoms', 'dresses', 'accessories']
+      const subcategory = formData.subcategory && validSubcategories.includes(formData.subcategory as string)
+        ? (formData.subcategory as 'rings' | 'necklaces' | 'earrings' | 'bracelets' | 'tops' | 'bottoms' | 'dresses' | 'accessories')
+        : 'rings'
+
+      const product: Product = {
+        id: editingId || `prod-${Date.now()}`,
+        name: formData.name || '',
+        price: formData.price || 0,
+        category: formData.category as 'jewellery' | 'clothes',
+        subcategory,
+        description: formData.description || '',
+        image: formData.image || '',
+        stock: formData.stock || 0,
+      }
+
+      saveProduct(product)
+      const updated = getProducts()
+      setProducts(updated)
+      resetForm()
+      setIsSubmitting(false)
+    }, 300)
   }
 
   const resetForm = () => {
@@ -130,7 +142,7 @@ export default function AdminProductsPage() {
         <header className="border-b border-border bg-card sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div>
-              <Link href="/admin/dashboard" className="font-heading text-2xl font-bold mb-1">LUXE Admin</Link>
+              <Link href="/admin/dashboard" className="font-heading text-2xl font-bold mb-1">ADs Admin</Link>
               <p className="text-sm text-muted-foreground">Products Management</p>
             </div>
             <button
@@ -337,9 +349,11 @@ export default function AdminProductsPage() {
                   <div className="flex gap-4">
                     <button
                       type="submit"
-                      className="flex-1 bg-foreground text-background py-3 font-semibold hover:bg-accent transition-colors"
+                      disabled={isSubmitting}
+                      className="flex-1 bg-foreground text-background py-3 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {editingId ? 'Update Product' : 'Add Product'}
+                      {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {isSubmitting ? 'Saving...' : (editingId ? 'Update Product' : 'Add Product')}
                     </button>
                     <button
                       type="button"

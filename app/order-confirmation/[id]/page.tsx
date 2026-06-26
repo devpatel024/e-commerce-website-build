@@ -7,9 +7,11 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getOrders, initializeStorage } from '@/lib/storage'
 import { Order } from '@/lib/types'
+import { useCart } from '@/context/CartContext'
 
 export default function OrderConfirmation() {
   const params = useParams()
+  const { removeOrderedItems } = useCart()
   const [order, setOrder] = useState<Order | null>(null)
 
   useEffect(() => {
@@ -17,7 +19,13 @@ export default function OrderConfirmation() {
     const orders = getOrders()
     const found = orders.find(o => o.id === params.id)
     setOrder(found || null)
-  }, [params.id])
+
+    // Clear ordered products from cart
+    if (found) {
+      const orderedProductIds = found.items.map(item => item.productId)
+      removeOrderedItems(orderedProductIds)
+    }
+  }, [params.id, removeOrderedItems])
 
   if (!order) {
     return (
@@ -44,8 +52,11 @@ export default function OrderConfirmation() {
             <p className="text-muted-foreground mb-6">
               Thank you for your purchase! Your order has been successfully placed.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               A confirmation email has been sent to <span className="font-semibold">{order.customer.email}</span>
+            </p>
+            <p className="text-xs text-accent font-semibold">
+              Your cart has been cleared. Ready to shop again?
             </p>
           </div>
 
@@ -132,16 +143,24 @@ export default function OrderConfirmation() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Link
-              href="/products"
-              className="flex-1 bg-foreground text-background py-3 font-semibold text-center hover:bg-accent hover:text-white transition-colors"
-            >
-              Continue Shopping
-            </Link>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4">
+              <Link
+                href="/account"
+                className="flex-1 bg-accent text-white py-3 font-semibold text-center hover:bg-accent/90 transition-colors"
+              >
+                View Your Orders
+              </Link>
+              <Link
+                href="/products"
+                className="flex-1 bg-foreground text-background py-3 font-semibold text-center hover:bg-accent hover:text-white transition-colors"
+              >
+                Continue Shopping
+              </Link>
+            </div>
             <Link
               href="/"
-              className="flex-1 border border-foreground py-3 font-semibold text-center hover:bg-foreground hover:text-background transition-colors"
+              className="border border-foreground py-3 font-semibold text-center hover:bg-foreground hover:text-background transition-colors"
             >
               Return to Home
             </Link>

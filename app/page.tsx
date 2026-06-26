@@ -6,16 +6,11 @@ import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import HeroCarousel from '@/components/HeroCarousel'
-import ProductShowcase from '@/components/ProductShowcase'
-import TestimonialSection from '@/components/TestimonialSection'
-import FAQSection from '@/components/FAQSection'
-import TrustBadges from '@/components/TrustBadges'
-import FeaturedCollections from '@/components/FeaturedCollections'
 import NewsletterSignup from '@/components/NewsletterSignup'
-import PromoBanner from '@/components/PromoBanner'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { Product } from '@/lib/types'
 import { formatPrice } from '@/lib/price-formatter'
+import { ArrowRight } from 'lucide-react'
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
@@ -30,65 +25,114 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <PromoBanner
-        title="Summer Sale"
-        message="Get up to 50% off on selected items. Limited time offer!"
-        ctaText="Shop Now"
-        ctaHref="/products?badge=sale"
-      />
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section with Carousel */}
+        {/* Hero Section */}
         <HeroCarousel />
 
-        {/* New Arrivals Showcase */}
-        <ProductShowcase
-          title="New Arrivals"
-          description="Discover our latest collection with fresh designs and premium materials"
-          products={products.filter(p => p.badge === 'new')}
-          badge="new"
-          showCount={8}
-        />
+        {/* Asymmetric Showcase Section */}
+        <section className="bg-background py-20 sm:py-32 lg:py-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-stretch">
+              
+              {/* Left Column - Large Image */}
+              <div className="lg:col-span-3">
+                <Link 
+                  href="/products?category=jewellery" 
+                  className="group relative overflow-hidden rounded-2xl h-96 sm:h-[480px] lg:h-[560px] flex flex-col justify-end block"
+                >
+                  <Image
+                    src="/category-jewellery.png"
+                    alt="Discover the collections"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  
+                  {/* Text overlay at bottom */}
+                  <div className="relative z-10 p-8 sm:p-12">
+                    <p className="text-sm font-medium tracking-widest text-white/80 uppercase mb-3">Premium Collection</p>
+                    <h2 className="text-[2.5rem] sm:text-4xl lg:text-5xl font-serif-display leading-tight text-white mb-2">
+                      Discover the Collections
+                    </h2>
+                    <p className="text-white/75 text-sm sm:text-base max-w-md">
+                      Curated pieces for those who appreciate quality and artistry
+                    </p>
+                  </div>
+                </Link>
+              </div>
 
-        {/* Best Sellers Showcase */}
-        <ProductShowcase
-          title="Best Sellers"
-          description="Customer favorites that consistently deliver excellence"
-          products={products.filter(p => p.badge === 'bestseller' || p.reviewCount! > 20).sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))}
-          badge="bestseller"
-          showCount={8}
-        />
+              {/* Right Column - Stacked Cards */}
+              <div className="lg:col-span-2 flex flex-col gap-8">
+                
+                {/* Top Card - New Arrivals */}
+                <Link 
+                  href="/products?category=clothes" 
+                  className="group rounded-2xl p-8 sm:p-10 transition-all duration-300 flex-1 flex flex-col justify-between relative overflow-hidden"
+                  style={{
+                    backgroundImage: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%), url(/category-clothes.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center right',
+                    backgroundAttachment: 'fixed',
+                  }}
+                >
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/40 pointer-events-none" />
+                  
+                  <div className="relative z-10">
+                    <p className="text-xs font-medium tracking-widest text-foreground/60 uppercase mb-4">New Arrivals</p>
+                    <h3 className="text-2xl sm:text-3xl font-serif-display text-foreground mb-2 leading-tight">
+                      Fashion Essentials
+                    </h3>
+                    <p className="text-sm text-foreground/70 leading-relaxed">
+                      Contemporary designs for the modern wardrobe
+                    </p>
+                  </div>
 
-        {/* Flash Deals Section */}
-        <ProductShowcase
-          title="Flash Deals"
-          description="Limited time offers on selected premium items"
-          products={products.filter(p => p.badge === 'sale' || p.originalPrice)}
-          badge="sale"
-          showCount={8}
-        />
+                  {/* Layered Images Background */}
+                  <div className="mt-8 relative h-40 -mx-8 -mb-8 sm:-mx-10 sm:-mb-10 z-10">
+                    <div className="absolute inset-0 flex items-end justify-center gap-4 px-4 sm:px-6">
+                      <div className="relative w-24 h-32 rounded-lg overflow-hidden shadow-lg bg-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                        <Image
+                          src="/category-clothes.png"
+                          alt="Fashion"
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                      </div>
+                      <div className="relative w-24 h-32 rounded-lg overflow-hidden shadow-lg bg-white transform translate-y-4 hover:shadow-2xl hover:scale-105 hover:translate-y-2 transition-all duration-300">
+                        <Image
+                          src="/category-jewellery.png"
+                          alt="Collection"
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
 
-        {/* Trending Section */}
-        <ProductShowcase
-          title="Trending Now"
-          description="The hottest items everyone is talking about"
-          products={products.filter(p => p.badge === 'trending' || p.rating! >= 4.7).sort((a, b) => (b.rating || 0) - (a.rating || 0))}
-          badge="trending"
-          showCount={8}
-        />
-
-        {/* Trust Badges */}
-        <TrustBadges />
-
-        {/* Featured Collections */}
-        <FeaturedCollections />
-
-        {/* Testimonials */}
-        <TestimonialSection />
-
-        {/* FAQ */}
-        <FAQSection />
+                {/* Bottom Card - Featured */}
+                <Link 
+                  href="/products?badge=sale" 
+                  className="group bg-secondary hover:bg-secondary/90 rounded-2xl p-8 sm:p-10 transition-all duration-300 flex items-center justify-between"
+                >
+                  <div className="flex-1">
+                    <p className="text-xs font-medium tracking-widest text-foreground/60 uppercase mb-2">Limited Offer</p>
+                    <p className="text-lg sm:text-xl text-foreground font-medium">
+                      Exclusive Sales
+                    </p>
+                  </div>
+                  <div className="ml-4 p-3 rounded-full bg-accent text-white group-hover:scale-110 transition-transform">
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Newsletter Signup */}
         <NewsletterSignup />

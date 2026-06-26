@@ -1,56 +1,70 @@
 'use server'
 
-import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { wishlist } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
-import { headers } from 'next/headers'
-import { revalidatePath } from 'next/cache'
+import { eq, and } from 'drizzle-orm'
 
-async function getUserId() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) throw new Error('Unauthorized')
-  return session.user.id
+export async function addToWishlist(productId: string, userId: string) {
+  try {
+    // Check if already in wishlist
+    const existing = await db
+      .select()
+      .from(wishlist)
+      .where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)))
+
+    if (existing.length > 0) {
+      return { success: true, message: 'Already in wishlist' }
+    }
+
+    await db.insert(wishlist).values({
+      userId,
+      productId,
+    })
+
+    return { success: true, message: 'Added to wishlist' }
+  } catch (error) {
+    console.error('[v0] Error adding to wishlist:', error)
+    return { success: false, message: 'Failed to add to wishlist' }
+  }
 }
 
-export async function addToWishlist(productId: string) {
-  const userId = await getUserId()
+export async function removeFromWishlist(productId: string, userId: string) {
+  try {
+    await db
+      .delete(wishlist)
+      .where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)))
 
-  const result = await db
-    .insert(wishlist)
-    .values({ userId, productId })
-    .returning()
-
-  revalidatePath('/wishlist')
-  revalidatePath('/products')
-
-  return result[0]
+    return { success: true, message: 'Removed from wishlist' }
+  } catch (error) {
+    console.error('[v0] Error removing from wishlist:', error)
+    return { success: false, message: 'Failed to remove from wishlist' }
+  }
 }
 
-export async function removeFromWishlist(productId: string) {
-  const userId = await getUserId()
+export async function getWishlist(userId: string) {
+  try {
+    const items = await db
+      .select()
+      .from(wishlist)
+      .where(eq(wishlist.userId, userId))
 
-  await db
-    .delete(wishlist)
-    .where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)))
-
-  revalidatePath('/wishlist')
-  revalidatePath('/products')
+    return items.map(item => item.productId)
+  } catch (error) {
+    console.error('[v0] Error fetching wishlist:', error)
+    return []
+  }
 }
 
-export async function getWishlist() {
-  const userId = await getUserId()
+export async function isProductInWishlist(productId: string, userId: string) {
+  try {
+    const item = await db
+      .select()
+      .from(wishlist)
+      .where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)))
 
-  return db.select().from(wishlist).where(eq(wishlist.userId, userId))
-}
-
-export async function isProductInWishlist(productId: string) {
-  const userId = await getUserId()
-
-  const items = await db
-    .select()
-    .from(wishlist)
-    .where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)))
-
-  return items.length > 0
+    return item.length > 0
+  } catch (error) {
+    console.error('[v0] Error checking wishlist:', error)
+    return false
+  }
 }

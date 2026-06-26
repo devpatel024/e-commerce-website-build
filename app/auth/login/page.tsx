@@ -1,16 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthContext } from '@/components/AuthProvider'
+import { Loader2 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const AnimatedLogo = dynamic(() => import('@/components/AnimatedLogo'), { ssr: true })
 
 type AuthTab = 'user-login' | 'user-register' | 'admin-login'
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, isLoading, login, register } = useAuthContext()
   const [activeTab, setActiveTab] = useState<AuthTab>('user-login')
+  const returnTo = searchParams.get('returnTo')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,9 +29,18 @@ export default function AuthPage() {
   useEffect(() => {
     // Redirect if already logged in
     if (!isLoading && user) {
-      router.push(user.role === 'admin' ? '/admin/dashboard' : '/')
+      // If user is admin, always go to admin dashboard
+      if (user.role === 'admin') {
+        router.push('/admin/dashboard')
+      } else {
+        // For regular users, go to returnTo if specified, otherwise home
+        const destination = returnTo && (returnTo.startsWith('/') || returnTo.startsWith('http'))
+          ? returnTo
+          : '/'
+        router.push(destination)
+      }
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, returnTo])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -112,8 +127,8 @@ export default function AuthPage() {
       {/* Navigation */}
       <nav className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold font-heading">
-            LUXE
+          <Link href="/" className="flex items-center gap-2">
+            <AnimatedLogo size="small" animated={true} />
           </Link>
         </div>
       </nav>
@@ -213,8 +228,9 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
@@ -232,7 +248,7 @@ export default function AuthPage() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold font-heading mb-2">Create Account</h1>
-                <p className="text-muted-foreground">Join LUXE to access exclusive collections</p>
+                <p className="text-muted-foreground">Join ADs to access exclusive collections</p>
               </div>
 
               <form onSubmit={handleUserRegister} className="space-y-4">
@@ -301,8 +317,9 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
@@ -313,7 +330,7 @@ export default function AuthPage() {
           {activeTab === 'admin-login' && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold font-heading mb-2">LUXE Admin Portal</h1>
+                <h1 className="text-3xl font-bold font-heading mb-2">ADs Admin Portal</h1>
                 <p className="text-muted-foreground">Access restricted admin features</p>
               </div>
 
@@ -341,8 +358,9 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-2 font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? 'Verifying...' : 'Admin Login'}
                 </button>
               </form>
@@ -356,10 +374,18 @@ export default function AuthPage() {
 
           {/* Footer */}
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>© 2024 LUXE. All rights reserved.</p>
+            <p>© 2024 ADs. All rights reserved.</p>
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
   )
 }

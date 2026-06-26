@@ -1,3 +1,9 @@
+'use client'
+
+import dynamic from 'next/dynamic'
+
+const AnimatedLogo = dynamic(() => import('./AnimatedLogo'), { ssr: true })
+
 export default function Footer() {
   const currentYear = new Date().getFullYear()
 
@@ -7,7 +13,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="animate-fade-in">
-            <h3 className="font-heading text-xl font-bold mb-4 hover:text-accent transition-colors">LUXE</h3>
+            <div className="mb-4">
+              <AnimatedLogo size="small" animated={true} />
+            </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Discover premium fashion and jewellery collections crafted with precision and passion.
             </p>
@@ -52,7 +60,7 @@ export default function Footer() {
 
         <div className="border-t border-border mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">&copy; {currentYear} LUXE Luxury Collections. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">&copy; {currentYear} ADs Luxury Collections. All rights reserved.</p>
             <div className="flex gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-accent transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-accent transition-colors">Terms of Service</a>

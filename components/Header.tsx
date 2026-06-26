@@ -1,14 +1,20 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuthContext } from './AuthProvider'
 import { useCart } from '@/context/CartContext'
+import { useWishlist } from '@/context/WishlistContext'
 import { ShoppingBag, LogOut, Menu, X, User, Heart } from 'lucide-react'
 import { useState } from 'react'
+import SearchBar from './SearchBar'
+import AnimatedLogo from './AnimatedLogo'
 
 export default function Header() {
+  const router = useRouter()
   const { user, logout } = useAuthContext()
   const { itemCount } = useCart()
+  const { itemCount: wishlistCount } = useWishlist()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
@@ -16,44 +22,39 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between h-20 transition-smooth">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-smooth group">
-            <div className="text-2xl font-bold tracking-wider font-heading group-hover:text-accent transition-colors">LUXE</div>
+            <AnimatedLogo size="small" animated={true} />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link
-              href="/"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Home
-            </Link>
-            <Link
-              href="/products"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Shop All
-            </Link>
-            <Link
-              href="/products?category=jewellery"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Jewellery
-            </Link>
-            <Link
-              href="/products?category=clothes"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Clothes
-            </Link>
-          </div>
+          {/* Desktop Navigation - Hidden on mobile */}
+          <div className="hidden lg:flex items-center flex-1 px-8" />
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
+            {/* Wishlist Icon */}
+            <button
+              onClick={() => {
+                if (!user) {
+                  router.push('/auth/login')
+                } else {
+                  router.push('/wishlist')
+                }
+              }}
+              className="relative p-2 text-muted-foreground transition-colors hover:text-foreground"
+              title="My Wishlist"
+            >
+              <Heart className="w-6 h-6" />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex items-center justify-center rounded-full bg-accent text-accent-foreground w-5 h-5 text-xs font-bold">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
+
             {/* Cart Icon */}
             <Link
               href="/cart"
@@ -127,7 +128,7 @@ export default function Header() {
               className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Shop All
+              Shop
             </Link>
             <Link
               href="/products?category=jewellery"
@@ -156,6 +157,38 @@ export default function Header() {
             )}
           </div>
         )}
+
+        {/* Category Chips Navigation - Below main nav */}
+        <div className="hidden md:flex items-center gap-3 pb-4 overflow-x-auto scrollbar-hide">
+          <Link
+            href="/products"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            All Products
+          </Link>
+          <Link
+            href="/products?category=jewellery"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            Jewellery
+          </Link>
+          <Link
+            href="/products?category=clothes"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            Clothes
+          </Link>
+          <Link
+            href="/products?badge=new"
+            className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-accent text-accent bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          >
+            New Arrivals
+          </Link>
+          <div className="flex-1 md:flex items-center gap-3 hidden">
+            <div className="w-px h-6 bg-border" />
+            <SearchBar />
+          </div>
+        </div>
       </div>
     </header>
   )

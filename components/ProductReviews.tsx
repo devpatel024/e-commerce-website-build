@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Star } from 'lucide-react'
 
 interface Review {
@@ -16,6 +16,8 @@ interface ProductReviewsProps {
   reviews?: Review[]
 }
 
+const REVIEWS_STORAGE_KEY = 'luxe_product_reviews'
+
 export default function ProductReviews({ productId, reviews = [] }: ProductReviewsProps) {
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [formData, setFormData] = useState({
@@ -24,6 +26,36 @@ export default function ProductReviews({ productId, reviews = [] }: ProductRevie
     comment: '',
   })
   const [submittedReviews, setSubmittedReviews] = useState<Review[]>(reviews)
+  const [mounted, setMounted] = useState(false)
+
+  // Load reviews from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(REVIEWS_STORAGE_KEY)
+        const allReviews = stored ? JSON.parse(stored) : {}
+        const productReviews = allReviews[productId] || []
+        setSubmittedReviews(productReviews)
+      } catch (error) {
+        console.error('[v0] Error loading reviews:', error)
+      }
+      setMounted(true)
+    }
+  }, [productId])
+
+  // Save reviews to localStorage whenever they change
+  const saveReviewsToStorage = (reviewsToSave: Review[]) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(REVIEWS_STORAGE_KEY)
+        const allReviews = stored ? JSON.parse(stored) : {}
+        allReviews[productId] = reviewsToSave
+        localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(allReviews))
+      } catch (error) {
+        console.error('[v0] Error saving reviews:', error)
+      }
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -49,7 +81,9 @@ export default function ProductReviews({ productId, reviews = [] }: ProductRevie
       date: new Date().toLocaleDateString(),
     }
 
-    setSubmittedReviews([newReview, ...submittedReviews])
+    const updatedReviews = [newReview, ...submittedReviews]
+    setSubmittedReviews(updatedReviews)
+    saveReviewsToStorage(updatedReviews)
     setFormData({ author: '', rating: 5, comment: '' })
     setShowReviewForm(false)
   }

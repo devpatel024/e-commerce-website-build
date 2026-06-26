@@ -19,6 +19,7 @@ interface CartContextType {
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
+  removeOrderedItems: (productIds: string[]) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -30,7 +31,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Initialize from localStorage on mount
   useEffect(() => {
     setMounted(true)
-    const savedCart = localStorage.getItem('cart')
+    const savedCart = localStorage.getItem('luxe_cart')
     if (savedCart) {
       try {
         setItems(JSON.parse(savedCart))
@@ -43,16 +44,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save to localStorage whenever items change
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem('cart', JSON.stringify(items))
-      // Dispatch custom event for other tabs/windows
-      window.dispatchEvent(new Event('cartUpdated'))
+      localStorage.setItem('luxe_cart', JSON.stringify(items))
     }
   }, [items, mounted])
 
   // Listen for storage changes from other tabs
   useEffect(() => {
+    if (!mounted) return
+
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cart' && e.newValue) {
+      if (e.key === 'luxe_cart' && e.newValue) {
         try {
           setItems(JSON.parse(e.newValue))
         } catch (err) {
@@ -61,38 +62,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const handleCartUpdate = () => {
-      const savedCart = localStorage.getItem('cart')
-      if (savedCart) {
-        try {
-          setItems(JSON.parse(savedCart))
-        } catch (e) {
-          console.log('[v0] Error parsing cart from custom event:', e)
-        }
-      }
-    }
-
     window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('cartUpdated', handleCartUpdate)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('cartUpdated', handleCartUpdate)
     }
-  }, [])
+  }, [mounted])
 
   const addToCart = useCallback((item: CartItem) => {
     setItems((prevItems) => {
-      const existingItem = prevItems.find(
+      const existingItemIndex = prevItems.findIndex(
         (i) => i.productId === item.productId && i.size === item.size && i.variant === item.variant
       )
 
-      if (existingItem) {
-        return prevItems.map((i) =>
-          i === existingItem
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        )
+      if (existingItemIndex >= 0) {
+        const newItems = [...prevItems]
+        newItems[existingItemIndex] = {
+          ...newItems[existingItemIndex],
+          quantity: newItems[existingItemIndex].quantity + item.quantity,
+        }
+        return newItems
       }
 
       return [...prevItems, item]
@@ -122,10 +111,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([])
   }, [])
 
+  const removeOrderedItems = useCallback((productIds: string[]) => {
+    setItems((prevItems) => 
+      prevItems.filter((item) => !productIds.includes(item.productId))
+    )
+  }, [])
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
-    <CartContext.Provider value={{ items, itemCount, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ items, itemCount, addToCart, removeFromCart, updateQuantity, clearCart, removeOrderedItems }}>
       {children}
     </CartContext.Provider>
   )

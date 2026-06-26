@@ -28,12 +28,19 @@ export default function QuickViewModal({
   const [isWishlisted, setIsWishlisted] = useState(
     product ? isInWishlist(product.id) : false
   )
-  const { addItem } = useCart()
+  const { addToCart } = useCart()
 
   if (!isOpen || !product) return null
 
   const handleAddToCart = () => {
-    addItem(product.id, quantity, selectedSize)
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity,
+      size: selectedSize,
+    })
     onClose()
   }
 
@@ -136,7 +143,7 @@ export default function QuickViewModal({
                 {/* Stock */}
                 <div className="mb-6">
                   {product.stock > 0 ? (
-                    <p className="text-green-600 font-semibold">In Stock</p>
+                    <p className="font-semibold" style={{ color: 'var(--green-primary)' }}>In Stock</p>
                   ) : (
                     <p className="text-red-600 font-semibold">Out of Stock</p>
                   )}
