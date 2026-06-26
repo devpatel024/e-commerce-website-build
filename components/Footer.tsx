@@ -1,3 +1,9 @@
+'use client'
+
+import dynamic from 'next/dynamic'
+
+const AnimatedLogo = dynamic(() => import('./AnimatedLogo'), { ssr: true })
+
 export default function Footer() {
   const currentYear = new Date().getFullYear()
 
@@ -7,7 +13,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="animate-fade-in">
-            <img src="/logos/ads-logo.png" alt="ADs Logo" className="h-8 w-auto mb-4" />
+            <div className="mb-4">
+              <AnimatedLogo size="small" animated={true} />
+            </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Discover premium fashion and jewellery collections crafted with precision and passion.
             </p>

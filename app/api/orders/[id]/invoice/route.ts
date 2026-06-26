@@ -56,10 +56,10 @@ async function getOrderFromDatabase(orderId: string) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id
+    const { id: orderId } = await params
 
     if (!orderId) {
       return NextResponse.json(
@@ -88,18 +88,19 @@ export async function GET(
     // Logo/Header - using text instead of image
     doc.setFontSize(24)
     doc.setTextColor(40, 40, 40)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.text('ADs', margin, yPosition)
     yPosition += 12
 
     // Invoice title
     doc.setFontSize(14)
+    doc.setFont('helvetica', 'normal')
     doc.text('INVOICE', margin, yPosition)
     yPosition += 8
 
     // Invoice details
     doc.setFontSize(10)
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     doc.setTextColor(100, 100, 100)
     doc.text(`Invoice #: ${order.id.slice(0, 8)}`, margin, yPosition)
     yPosition += 6
@@ -110,11 +111,11 @@ export async function GET(
 
     // Customer Information
     doc.setTextColor(40, 40, 40)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.text('BILL TO:', margin, yPosition)
     yPosition += 6
     
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     doc.setTextColor(60, 60, 60)
     doc.text(order.customerName, margin, yPosition)
     yPosition += 5
@@ -129,7 +130,7 @@ export async function GET(
 
     // Items Table Header
     doc.setFontSize(10)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.setTextColor(40, 40, 40)
     
     const tableStartY = yPosition
@@ -156,7 +157,7 @@ export async function GET(
     yPosition += 6
 
     // Items
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     doc.setTextColor(60, 60, 60)
     const lineHeight = 6
 
@@ -193,7 +194,7 @@ export async function GET(
     yPosition += 6
 
     // Summary
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     const subtotal = parseFloat(order.subtotal)
     const total = parseFloat(order.total)
     const tax = total - subtotal
@@ -209,7 +210,7 @@ export async function GET(
     yPosition += 6
 
     // Total (bold)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.setFontSize(12)
     doc.setTextColor(40, 40, 40)
     doc.text('TOTAL:', colX, yPosition, { align: 'right' })
@@ -219,7 +220,7 @@ export async function GET(
     yPosition = pageHeight - margin - 20
     doc.setFontSize(8)
     doc.setTextColor(100, 100, 100)
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     doc.text('Thank you for your purchase!', pageWidth / 2, yPosition, { align: 'center' })
     yPosition += 5
     doc.text('For support, contact support@ads.com', pageWidth / 2, yPosition, { align: 'center' })

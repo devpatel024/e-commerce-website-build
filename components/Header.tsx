@@ -8,6 +8,7 @@ import { useWishlist } from '@/context/WishlistContext'
 import { ShoppingBag, LogOut, Menu, X, User, Heart } from 'lucide-react'
 import { useState } from 'react'
 import SearchBar from './SearchBar'
+import AnimatedLogo from './AnimatedLogo'
 
 export default function Header() {
   const router = useRouter()
@@ -26,7 +27,7 @@ export default function Header() {
         <nav className="flex items-center justify-between h-20 transition-smooth">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-smooth group">
-            <img src="/logos/ads-logo.png" alt="ADs Logo" className="h-10 w-auto" />
+            <AnimatedLogo size="small" animated={true} />
           </Link>
 
           {/* Desktop Navigation - Hidden on mobile */}

@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthContext } from '@/components/AuthProvider'
 import { Loader2 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const AnimatedLogo = dynamic(() => import('@/components/AnimatedLogo'), { ssr: true })
 
 type AuthTab = 'user-login' | 'user-register' | 'admin-login'
 
@@ -125,7 +128,7 @@ function AuthPageContent() {
       <nav className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logos/ads-logo.png" alt="ADs Logo" className="h-8 w-auto" />
+            <AnimatedLogo size="small" animated={true} />
           </Link>
         </div>
       </nav>
