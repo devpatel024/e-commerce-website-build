@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useRef, useEffect, useState } from 'react'
 
 interface AudioContextType {
-  audioRef: React.RefObject<HTMLAudioElement>
+  audioRef: React.RefObject<HTMLAudioElement | null>
   isPlaying: boolean
   toggleAudio: () => void
 }
@@ -11,7 +11,7 @@ interface AudioContextType {
 const AudioContext = createContext<AudioContextType | undefined>(undefined)
 
 export function AudioProviderContext({ children }: { children: React.ReactNode }) {
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(true)
 
   useEffect(() => {

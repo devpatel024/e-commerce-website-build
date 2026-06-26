@@ -241,10 +241,42 @@ function ProductsContent({
   )
 }
 
-export default function ProductsPage({
+async function ProductsPageServer({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+
+  const category = typeof params.category === 'string' ? params.category : undefined
+  const subcategory = typeof params.subcategory === 'string' ? params.subcategory : undefined
+  const minPrice = typeof params.minPrice === 'string' ? params.minPrice : undefined
+  const maxPrice = typeof params.maxPrice === 'string' ? params.maxPrice : undefined
+  const sort = typeof params.sort === 'string' ? params.sort : undefined
+
+  return (
+    <ProductsPageClient
+      category={category}
+      subcategory={subcategory}
+      minPrice={minPrice}
+      maxPrice={maxPrice}
+      sort={sort}
+    />
+  )
+}
+
+function ProductsPageClient({
+  category,
+  subcategory,
+  minPrice,
+  maxPrice,
+  sort,
+}: {
+  category?: string
+  subcategory?: string
+  minPrice?: string
+  maxPrice?: string
+  sort?: string
 }) {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -259,12 +291,6 @@ export default function ProductsPage({
     }, 300)
     return () => clearTimeout(timer)
   }, [])
-
-  const category = typeof searchParams.category === 'string' ? searchParams.category : undefined
-  const subcategory = typeof searchParams.subcategory === 'string' ? searchParams.subcategory : undefined
-  const minPrice = typeof searchParams.minPrice === 'string' ? searchParams.minPrice : undefined
-  const maxPrice = typeof searchParams.maxPrice === 'string' ? searchParams.maxPrice : undefined
-  const sort = typeof searchParams.sort === 'string' ? searchParams.sort : undefined
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -298,3 +324,5 @@ export default function ProductsPage({
     </div>
   )
 }
+
+export default ProductsPageServer

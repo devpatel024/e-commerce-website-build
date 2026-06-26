@@ -27,7 +27,7 @@ export default function Header() {
         <nav className="flex items-center justify-between h-16 transition-smooth">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-smooth group">
-            <AnimatedLogo size="small" animated={true} />
+            <AnimatedLogo size="small" />
           </Link>
 
           {/* Desktop Navigation - Hidden on mobile */}
