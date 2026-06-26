@@ -8,9 +8,9 @@ export default function AdminSettingsPage() {
   const router = useRouter()
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    storeName: 'LUXE',
-    storeEmail: 'info@luxe.com',
-    supportEmail: 'support@luxe.com',
+    storeName: 'ADs',
+    storeEmail: 'info@ads.com',
+    supportEmail: 'support@ads.com',
     taxRate: '10',
     shippingCost: '10',
     maintenanceMode: false,
@@ -47,7 +47,7 @@ export default function AdminSettingsPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 className="font-heading text-2xl font-bold">LUXE Admin - Settings</h1>
+          <h1 className="font-heading text-2xl font-bold">ADs Admin - Settings</h1>
           <button
             onClick={() => router.push('/admin/dashboard')}
             className="px-4 py-2 text-sm font-medium border border-border hover:bg-secondary transition-colors"

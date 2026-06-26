@@ -30,14 +30,14 @@ const testimonials: Testimonial[] = [
     role: 'Style Blogger',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anjali',
     rating: 5,
-    comment: 'LUXE is my go-to for premium fashion. The designs are elegant and timeless. Highly recommended!',
+    comment: 'ADs is my go-to for premium fashion. The designs are elegant and timeless. Highly recommended!',
   },
   {
     name: 'Rahul Gupta',
     role: 'Luxury Enthusiast',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul',
     rating: 5,
-    comment: 'Every detail is perfection. From packaging to product quality, LUXE exceeds expectations. Bravo!',
+    comment: 'Every detail is perfection. From packaging to product quality, ADs exceeds expectations. Bravo!',
   },
 ]
 
@@ -51,7 +51,7 @@ export default function TestimonialSection() {
             Loved by Our Customers
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust LUXE for premium fashion and jewelry.
+            Join thousands of satisfied customers who trust ADs for premium fashion and jewelry.
           </p>
         </div>
 

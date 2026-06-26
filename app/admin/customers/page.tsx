@@ -81,7 +81,7 @@ export default function AdminCustomersPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 className="font-heading text-2xl font-bold">LUXE Admin - Customers</h1>
+          <h1 className="font-heading text-2xl font-bold">ADs Admin - Customers</h1>
           <button
             onClick={() => router.push('/admin/dashboard')}
             className="px-4 py-2 text-sm font-medium border border-border hover:bg-secondary transition-colors"

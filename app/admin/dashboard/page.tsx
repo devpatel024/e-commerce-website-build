@@ -48,22 +48,54 @@ export default function AdminDashboardPage() {
     try {
       // Fetch orders from database API
       const ordersResponse = await fetch('/api/admin/orders')
-      const ordersData = ordersResponse.ok ? await ordersResponse.json() : { data: [] }
-      const ordersFromDB = ordersData.data || []
+      if (!ordersResponse.ok) {
+        throw new Error(`API error: ${ordersResponse.status}`)
+      }
+      const ordersData = await ordersResponse.json()
+      const dbOrders = ordersData.data || []
+
+      // Transform database orders to frontend Order type
+      const transformedOrders: Order[] = dbOrders.map((dbOrder: any) => {
+        let items: any[] = []
+        try {
+          if (dbOrder.items) {
+            items = typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items
+          }
+        } catch (e) {
+          console.error('[v0] Error parsing items for order', dbOrder.id, e)
+        }
+
+        return {
+          id: dbOrder.id,
+          createdAt: dbOrder.createdAt,
+          status: dbOrder.status || 'pending',
+          items: items || [],
+          total: typeof dbOrder.total === 'string' ? parseFloat(dbOrder.total) : dbOrder.total,
+          customer: {
+            name: dbOrder.customerName,
+            email: dbOrder.customerEmail,
+            address: dbOrder.address,
+            city: dbOrder.city,
+            postalCode: dbOrder.postalCode,
+            country: dbOrder.country,
+          },
+          userId: dbOrder.userId,
+        }
+      })
 
       // Fetch products from storage (or API if available)
       initializeStorage()
       const productsData = getProducts()
       
-      setOrders(ordersFromDB)
+      setOrders(transformedOrders)
       setProducts(productsData)
-      setStats(calculateDashboardStats(ordersFromDB, productsData))
+      setStats(calculateDashboardStats(transformedOrders, productsData))
       
       // Calculate new analytics
-      setRevenueTrend(getRevenueTrend(ordersFromDB, 30))
-      setCategoryRevenue(getCategoryRevenue(ordersFromDB, productsData))
-      setTopProducts(getTopProducts(ordersFromDB, productsData, 5))
-      setOrderStatus(getOrderStatusBreakdown(ordersFromDB))
+      setRevenueTrend(getRevenueTrend(transformedOrders, 30))
+      setCategoryRevenue(getCategoryRevenue(transformedOrders, productsData))
+      setTopProducts(getTopProducts(transformedOrders, productsData, 5))
+      setOrderStatus(getOrderStatusBreakdown(transformedOrders))
       setLowStockProducts(getLowStockProducts(productsData, 5))
     } catch (error) {
       console.error('[v0] Error fetching dashboard data:', error)

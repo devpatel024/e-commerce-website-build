@@ -42,7 +42,7 @@ export default function AdminSidebar() {
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-border">
           <Link href="/admin/dashboard" className="font-heading text-lg font-bold">
-            LUXE Admin
+            ADs Admin
           </Link>
         </div>
 

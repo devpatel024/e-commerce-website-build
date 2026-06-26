@@ -1,8 +1,8 @@
 import AdminLayout from '@/components/AdminLayout'
 
 export const metadata = {
-  title: 'Admin Dashboard - LUXE',
-  description: 'Manage your LUXE store',
+  title: 'Admin Dashboard - ADs',
+  description: 'Manage your ADs store',
 }
 
 export default function AdminRootLayout({

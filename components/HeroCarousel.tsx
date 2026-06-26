@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react'
 
 interface Slide {
   id: number
   image: string
+  video?: string
   title: string
   subtitle: string
 }
@@ -15,18 +16,21 @@ const heroSlides: Slide[] = [
   {
     id: 1,
     image: '/hero-1.png',
+    video: 'https://cdn.pixabay.com/vimeo/758544340/jewelry-58447-hd.mp4',
     title: 'Timeless Elegance',
     subtitle: 'Discover exquisite jewelry crafted with precision and passion',
   },
   {
     id: 2,
     image: '/hero-2.png',
+    video: 'https://cdn.pixabay.com/vimeo/757843314/fashion-58207-hd.mp4',
     title: 'Premium Fashion',
     subtitle: 'Elevate your style with our luxury apparel collection',
   },
   {
     id: 3,
     image: '/hero-3.png',
+    video: 'https://cdn.pixabay.com/vimeo/759129618/luxury-58611-hd.mp4',
     title: 'Pure Luxury',
     subtitle: 'Experience sophistication in every piece',
   },
@@ -36,6 +40,8 @@ export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoPlay, setAutoPlay] = useState(true)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
+  const [soundPlaying, setSoundPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
     if (!autoPlay) return
@@ -47,6 +53,43 @@ export default function HeroCarousel() {
 
     return () => clearInterval(interval)
   }, [autoPlay])
+
+  useEffect(() => {
+    // Load sound preference from localStorage
+    const savedSoundPref = localStorage.getItem('heroSoundPlaying')
+    if (savedSoundPref === 'true' && audioRef.current) {
+      audioRef.current.volume = 0.2
+      audioRef.current.play().catch(() => {
+        // Autoplay might be blocked by browser
+        setSoundPlaying(false)
+      })
+      setSoundPlaying(true)
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+    }
+  }, [])
+
+  const toggleSound = () => {
+    if (!audioRef.current) return
+
+    if (soundPlaying) {
+      audioRef.current.pause()
+      setSoundPlaying(false)
+      localStorage.setItem('heroSoundPlaying', 'false')
+    } else {
+      audioRef.current.volume = 0.2
+      audioRef.current.play().catch(() => {
+        // Handle browser autoplay restrictions
+        console.log('[v0] Audio playback blocked by browser')
+      })
+      setSoundPlaying(true)
+      localStorage.setItem('heroSoundPlaying', 'true')
+    }
+  }
 
   const goToSlide = (index: number) => {
     setDirection(index > currentSlide ? 'next' : 'prev')
@@ -98,6 +141,24 @@ export default function HeroCarousel() {
                 transitionTimingFunction: 'cubic-bezier(0.32, 0.72, 0.48, 1)',
               }}
             >
+              {/* Video Background */}
+              {s.video && (isActive || isNext || isPrev) && (
+                <video
+                  autoPlay={isActive}
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={() => {
+                    // Fallback to image on video error
+                    console.log('[v0] Video failed to load, using image fallback')
+                  }}
+                >
+                  <source src={s.video} type="video/mp4" />
+                </video>
+              )}
+
+              {/* Image Fallback */}
               <Image
                 src={s.image}
                 alt={s.title}
@@ -162,6 +223,32 @@ export default function HeroCarousel() {
           />
         ))}
       </div>
+
+      {/* Sound Toggle Button */}
+      <button
+        onClick={toggleSound}
+        className="absolute bottom-8 right-4 md:right-8 z-20 bg-white/10 backdrop-blur-md hover:bg-white/30 text-white p-3 md:p-4 transition-all duration-300 hover:scale-110 rounded-full border border-white/20"
+        aria-label={soundPlaying ? 'Mute ambient sound' : 'Play ambient sound'}
+      >
+        {soundPlaying ? (
+          <Volume2 className="w-6 h-6 md:w-8 md:h-8" />
+        ) : (
+          <VolumeX className="w-6 h-6 md:w-8 md:h-8" />
+        )}
+      </button>
+
+      {/* Audio Element */}
+      <audio
+        ref={audioRef}
+        loop
+        preload="auto"
+        onError={() => {
+          console.log('[v0] Audio failed to load from primary source')
+        }}
+      >
+        <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0373394a80.mp3" type="audio/mpeg" />
+        <source src="/audio/ambient-luxury.mp3" type="audio/mpeg" />
+      </audio>
 
       {/* Bottom Gradient */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-5" />
