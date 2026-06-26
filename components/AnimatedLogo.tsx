@@ -1,151 +1,62 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-
-interface AnimatedLogoProps {
+interface LogoProps {
   size?: 'small' | 'medium' | 'large'
-  animated?: boolean
 }
 
-export default function AnimatedLogo({ size = 'medium', animated = true }: AnimatedLogoProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number | null>(null)
-  const timeRef = useRef<number>(0)
-
+export default function AnimatedLogo({ size = 'medium' }: LogoProps) {
   const sizeMap = {
-    small: { width: 40, height: 40, fontSize: 16 },
-    medium: { width: 80, height: 80, fontSize: 32 },
-    large: { width: 160, height: 160, fontSize: 64 },
+    small: { width: 48, height: 48, viewBox: '0 0 64 64' },
+    medium: { width: 64, height: 64, viewBox: '0 0 64 64' },
+    large: { width: 96, height: 96, viewBox: '0 0 64 64' },
   }
 
-  const { width, height, fontSize } = sizeMap[size]
-
-  // Modern color palette
-  const colors = {
-    primary: '#8A5F41',
-    secondary: '#A77F60',
-    accent: '#CCD67F',
-    light: '#F3E4C9',
-  }
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    canvas.width = width
-    canvas.height = height
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
-    const animate = () => {
-      ctx.clearRect(0, 0, width, height)
-
-      if (animated) {
-        timeRef.current += 0.015
-      }
-
-      const time = timeRef.current
-      const centerX = width / 2
-      const centerY = height / 2
-      const baseRadius = width / 3.5
-
-      // Draw rotating outer ring with gradient effect
-      const ringRotation = time * 0.3
-      for (let i = 0; i < 3; i++) {
-        const angle = ringRotation + (Math.PI * 2 * i) / 3
-        const opacity = 0.3 + Math.sin(time * 1.5 + i) * 0.2
-        
-        ctx.strokeStyle = `rgba(138, 95, 65, ${opacity})`
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, baseRadius + i * 3, 0, Math.PI * 2)
-        ctx.stroke()
-      }
-
-      // Draw animated pulsing circle
-      const pulseScale = 1 + Math.sin(time * 2) * 0.15
-      ctx.strokeStyle = `rgba(204, 214, 127, ${0.6 + Math.sin(time * 2.5) * 0.2})`
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, baseRadius * 0.6 * pulseScale, 0, Math.PI * 2)
-      ctx.stroke()
-
-      // Draw "AD" text with modern styling
-      ctx.font = `600 ${fontSize}px 'Geist', sans-serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillStyle = colors.primary
-      ctx.fillText('AD', centerX, centerY)
-
-      // Add accent underline with animation
-      const textWidth = ctx.measureText('AD').width
-      const lineY = centerY + fontSize * 0.4
-      const lineWidth = textWidth * (0.5 + Math.sin(time * 1.5) * 0.2)
-      
-      ctx.fillStyle = `rgba(204, 214, 127, ${0.5 + Math.sin(time * 2) * 0.3})`
-      ctx.fillRect(centerX - lineWidth / 2, lineY, lineWidth, 2)
-
-      // Draw rotating dots around the logo
-      const dotRadius = baseRadius * 1.3
-      for (let i = 0; i < 3; i++) {
-        const angle = time * 0.8 + (Math.PI * 2 * i) / 3
-        const dotX = centerX + Math.cos(angle) * dotRadius
-        const dotY = centerY + Math.sin(angle) * dotRadius
-        const dotOpacity = 0.4 + Math.sin(time * 2.5 + i) * 0.3
-
-        ctx.fillStyle = `rgba(167, 127, 96, ${dotOpacity})`
-        ctx.beginPath()
-        ctx.arc(dotX, dotY, 2, 0, Math.PI * 2)
-        ctx.fill()
-      }
-
-      // Draw corner accent rectangles with rotation
-      const cornerRotation = time * 0.5
-      const cornerSize = 4
-      const cornerDistance = baseRadius * 1.1
-
-      ctx.save()
-      ctx.translate(centerX, centerY)
-      ctx.rotate(cornerRotation)
-
-      for (let i = 0; i < 4; i++) {
-        const angle = (Math.PI / 2) * i
-        const x = Math.cos(angle) * cornerDistance
-        const y = Math.sin(angle) * cornerDistance
-        const opacity = 0.4 + Math.sin(time * 2 + i) * 0.3
-
-        ctx.fillStyle = `rgba(204, 214, 127, ${opacity})`
-        ctx.fillRect(x - cornerSize / 2, y - cornerSize / 2, cornerSize, cornerSize)
-      }
-
-      ctx.restore()
-
-      if (animated) {
-        animationRef.current = requestAnimationFrame(animate)
-      }
-    }
-
-    animate()
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-    }
-  }, [width, height, fontSize, animated])
+  const config = sizeMap[size]
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      className="rounded-lg"
-      style={{
-        filter: animated ? 'drop-shadow(0 4px 12px rgba(138, 95, 65, 0.15))' : 'none',
-      }}
-    />
+    <svg
+      width={config.width}
+      height={config.height}
+      viewBox={config.viewBox}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="hover:opacity-80 transition-opacity duration-300"
+    >
+      {/* Rounded Square Background */}
+      <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="#8A5F41" />
+      
+      {/* Decorative corner accents */}
+      <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="url(#bgGradient)" opacity="0.15" />
+
+      <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#CCD67F" />
+          <stop offset="100%" stopColor="#A77F60" />
+        </linearGradient>
+      </defs>
+
+      {/* Letter A - Modern geometric style */}
+      <g>
+        {/* Left stroke of A */}
+        <path d="M 18 44 L 28 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Right stroke of A */}
+        <path d="M 38 14 L 28 44" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Horizontal bar of A */}
+        <path d="M 20 30 L 36 30" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+
+      {/* Letter D - Overlapped with A */}
+      <g>
+        {/* Vertical line of D */}
+        <path d="M 38 14 L 38 44" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Top curve of D */}
+        <path d="M 38 14 Q 50 14 50 24 Q 50 30 46 30" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        {/* Bottom curve of D */}
+        <path d="M 38 30 Q 50 30 50 40 Q 50 44 38 44" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </g>
+
+      {/* Accent highlight */}
+      <circle cx="52" cy="20" r="1.5" fill="#CCD67F" opacity="0.8" />
+    </svg>
   )
 }

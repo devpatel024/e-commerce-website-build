@@ -14,7 +14,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="animate-fade-in">
             <div className="mb-4">
-              <AnimatedLogo size="small" animated={true} />
+              <AnimatedLogo size="small" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Discover premium fashion and jewellery collections crafted with precision and passion.

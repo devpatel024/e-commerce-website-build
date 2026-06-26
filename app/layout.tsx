@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { CartProvider } from '@/context/CartContext'
 import { AddressProvider } from '@/context/AddressContext'
 import { WishlistProvider } from '@/context/WishlistContext'
+import { AudioProviderContext } from '@/context/AudioContext'
 import PageLoadingBar from '@/components/PageLoadingBar'
 import ScrollProgressBar from '@/components/ScrollProgressBar'
 import AudioProvider from '@/components/AudioProvider'
@@ -67,16 +68,18 @@ export default function RootLayout({
           <PageLoadingBar />
         </div>
         <ScrollProgressBar />
-        <AudioProvider />
-        <AuthProvider>
-          <AddressProvider>
-            <CartProvider>
-              <WishlistProvider>
-                {children}
-              </WishlistProvider>
-            </CartProvider>
-          </AddressProvider>
-        </AuthProvider>
+        <AudioProviderContext>
+          <AudioProvider />
+          <AuthProvider>
+            <AddressProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  {children}
+                </WishlistProvider>
+              </CartProvider>
+            </AddressProvider>
+          </AuthProvider>
+        </AudioProviderContext>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

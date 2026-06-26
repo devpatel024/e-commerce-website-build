@@ -1,40 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
+import { useAudio } from '@/context/AudioContext'
 
 export default function HeroCarousel() {
   const videoUrl = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/855854-hd_1280_720_24fps-MvGBt9GqY9xgxCvWeoIewloFZ0CZFn.mp4'
-  const [soundPlaying, setSoundPlaying] = useState(false)
-  const audioRef = useRef<HTMLAudioElement>(null)
-
-  useEffect(() => {
-    const savedSoundPref = localStorage.getItem('heroSoundPlaying')
-    if (savedSoundPref === 'true' && audioRef.current) {
-      audioRef.current.volume = 0.2
-      audioRef.current.play().catch(() => {
-        setSoundPlaying(false)
-      })
-      setSoundPlaying(true)
-    }
-  }, [])
-
-  const toggleSound = () => {
-    if (!audioRef.current) return
-
-    if (soundPlaying) {
-      audioRef.current.pause()
-      setSoundPlaying(false)
-      localStorage.setItem('heroSoundPlaying', 'false')
-    } else {
-      audioRef.current.volume = 0.2
-      audioRef.current.play().catch(() => {
-        console.log('[v0] Audio playback blocked by browser')
-      })
-      setSoundPlaying(true)
-      localStorage.setItem('heroSoundPlaying', 'true')
-    }
-  }
+  const { isPlaying, toggleAudio } = useAudio()
 
   return (
     <section className="relative w-full h-screen bg-background overflow-hidden">
@@ -66,25 +37,16 @@ export default function HeroCarousel() {
 
       {/* Sound Toggle Button */}
       <button
-        onClick={toggleSound}
+        onClick={toggleAudio}
         className="absolute bottom-8 right-4 md:right-8 z-20 bg-white/10 backdrop-blur-md hover:bg-white/30 text-white p-3 md:p-4 transition-all duration-300 hover:scale-110 rounded-full border border-white/20"
-        aria-label={soundPlaying ? 'Mute ambient sound' : 'Play ambient sound'}
+        aria-label={isPlaying ? 'Mute ambient sound' : 'Play ambient sound'}
       >
-        {soundPlaying ? (
+        {isPlaying ? (
           <Volume2 className="w-6 h-6 md:w-8 md:h-8" />
         ) : (
           <VolumeX className="w-6 h-6 md:w-8 md:h-8" />
         )}
       </button>
-
-      {/* Audio Element */}
-      <audio
-        ref={audioRef}
-        loop
-        preload="auto"
-      >
-        <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0373394a80.mp3" type="audio/mpeg" />
-      </audio>
 
       {/* Bottom Gradient */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-5" />
