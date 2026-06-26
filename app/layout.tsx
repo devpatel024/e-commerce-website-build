@@ -8,6 +8,7 @@ import { AddressProvider } from '@/context/AddressContext'
 import { WishlistProvider } from '@/context/WishlistContext'
 import PageLoadingBar from '@/components/PageLoadingBar'
 import ScrollProgressBar from '@/components/ScrollProgressBar'
+import AudioProvider from '@/components/AudioProvider'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -66,6 +67,7 @@ export default function RootLayout({
           <PageLoadingBar />
         </div>
         <ScrollProgressBar />
+        <AudioProvider />
         <AuthProvider>
           <AddressProvider>
             <CartProvider>
