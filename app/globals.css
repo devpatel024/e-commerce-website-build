@@ -50,30 +50,30 @@
 
 :root {
   color-scheme: light;
-  /* Premium color palette */
-  --background: #F7F5F0;
-  --foreground: #2E2C24;
-  --card: #F7F5F0;
-  --card-foreground: #2E2C24;
+  /* Premium color palette - Warm Earthy Tones */
+  --background: #F3E4C9;
+  --foreground: #8A5F41;
+  --card: #F3E4C9;
+  --card-foreground: #8A5F41;
   --popover: #FFFFFF;
-  --popover-foreground: #2E2C24;
-  --primary: #6B7152;
-  --primary-foreground: #F7F5F0;
-  --secondary: #E8E6DC;
-  --secondary-foreground: #2E2C24;
-  --muted: #A8AD8E;
-  --muted-foreground: #8A8A7F;
-  --accent: #6B7152;
-  --accent-foreground: #FFFFFF;
+  --popover-foreground: #8A5F41;
+  --primary: #8A5F41;
+  --primary-foreground: #F3E4C9;
+  --secondary: #A77F60;
+  --secondary-foreground: #F3E4C9;
+  --muted: #CCD67F;
+  --muted-foreground: #A77F60;
+  --accent: #8A5F41;
+  --accent-foreground: #F3E4C9;
   --destructive: #dc2626;
-  --border: #E8E6DC;
-  --input: #F7F5F0;
-  --ring: #6B7152;
-  --chart-1: #6B7152;
-  --chart-2: #A8AD8E;
-  --chart-3: #E8E6DC;
-  --chart-4: #F7F5F0;
-  --chart-5: #2E2C24;
+  --border: #A77F60;
+  --input: #F3E4C9;
+  --ring: #8A5F41;
+  --chart-1: #8A5F41;
+  --chart-2: #A77F60;
+  --chart-3: #CCD67F;
+  --chart-4: #F3E4C9;
+  --chart-5: #8A5F41;
   --radius: 0.75rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #1a1a1a;
