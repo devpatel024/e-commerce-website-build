@@ -16,21 +16,21 @@ const heroSlides: Slide[] = [
   {
     id: 1,
     image: '/hero-1.png',
-    video: '/videos/hero-bg-1.mp4',
+    video: 'https://cdn.pixabay.com/vimeo/758544340/jewelry-58447-hd.mp4',
     title: 'Timeless Elegance',
     subtitle: 'Discover exquisite jewelry crafted with precision and passion',
   },
   {
     id: 2,
     image: '/hero-2.png',
-    video: '/videos/hero-bg-2.mp4',
+    video: 'https://cdn.pixabay.com/vimeo/757843314/fashion-58207-hd.mp4',
     title: 'Premium Fashion',
     subtitle: 'Elevate your style with our luxury apparel collection',
   },
   {
     id: 3,
     image: '/hero-3.png',
-    video: '/videos/hero-bg-3.mp4',
+    video: 'https://cdn.pixabay.com/vimeo/759129618/luxury-58611-hd.mp4',
     title: 'Pure Luxury',
     subtitle: 'Experience sophistication in every piece',
   },
@@ -242,7 +242,11 @@ export default function HeroCarousel() {
         ref={audioRef}
         loop
         preload="auto"
+        onError={() => {
+          console.log('[v0] Audio failed to load from primary source')
+        }}
       >
+        <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0373394a80.mp3" type="audio/mpeg" />
         <source src="/audio/ambient-luxury.mp3" type="audio/mpeg" />
       </audio>
 

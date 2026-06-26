@@ -25,7 +25,7 @@ const crimsonText = Crimson_Text({
 })
 
 export const metadata: Metadata = {
-  title: 'Luxe - Fashion & Jewellery',
+  title: 'ADs - Fashion & Jewellery',
   description: 'Discover premium fashion and jewellery collections. Elegant, timeless pieces for the modern aesthetic.',
   generator: 'v0.app',
   icons: {

@@ -142,7 +142,7 @@ export default function AdminProductsPage() {
         <header className="border-b border-border bg-card sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div>
-              <Link href="/admin/dashboard" className="font-heading text-2xl font-bold mb-1">LUXE Admin</Link>
+              <Link href="/admin/dashboard" className="font-heading text-2xl font-bold mb-1">ADs Admin</Link>
               <p className="text-sm text-muted-foreground">Products Management</p>
             </div>
             <button

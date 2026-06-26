@@ -124,8 +124,8 @@ function AuthPageContent() {
       {/* Navigation */}
       <nav className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold font-heading">
-            LUXE
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/logos/ads-logo.png" alt="ADs Logo" className="h-8 w-auto" />
           </Link>
         </div>
       </nav>
@@ -245,7 +245,7 @@ function AuthPageContent() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold font-heading mb-2">Create Account</h1>
-                <p className="text-muted-foreground">Join LUXE to access exclusive collections</p>
+                <p className="text-muted-foreground">Join ADs to access exclusive collections</p>
               </div>
 
               <form onSubmit={handleUserRegister} className="space-y-4">
@@ -327,7 +327,7 @@ function AuthPageContent() {
           {activeTab === 'admin-login' && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold font-heading mb-2">LUXE Admin Portal</h1>
+                <h1 className="text-3xl font-bold font-heading mb-2">ADs Admin Portal</h1>
                 <p className="text-muted-foreground">Access restricted admin features</p>
               </div>
 
@@ -371,7 +371,7 @@ function AuthPageContent() {
 
           {/* Footer */}
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>© 2024 LUXE. All rights reserved.</p>
+            <p>© 2024 ADs. All rights reserved.</p>
           </div>
         </div>
       </div>

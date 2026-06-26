@@ -26,7 +26,7 @@ export default function Header() {
         <nav className="flex items-center justify-between h-20 transition-smooth">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-smooth group">
-            <div className="text-2xl font-bold tracking-wider font-heading group-hover:text-accent transition-colors">LUXE</div>
+            <img src="/logos/ads-logo.png" alt="ADs Logo" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation - Hidden on mobile */}

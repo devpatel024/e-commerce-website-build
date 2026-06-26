@@ -18,17 +18,100 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    initializeStorage()
-    const orders = getOrders()
-    const foundOrder = orders.find(o => o.id === orderId)
-    
-    if (foundOrder) {
-      setOrder(foundOrder)
-    } else {
-      setOrder(null)
+    const fetchOrder = async () => {
+      try {
+        // Try to fetch from database first
+        const response = await fetch(`/api/admin/orders`)
+        const data = await response.json()
+        
+        if (data.success && data.data) {
+          const orders = data.data
+          const dbOrder = orders.find((o: any) => o.id === orderId)
+          
+          if (dbOrder) {
+            // Transform database order to frontend type
+            let items: any[] = []
+            try {
+              if (dbOrder.items) {
+                items = typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items
+              }
+            } catch (e) {
+              console.log('[v0] Error parsing items')
+            }
+
+            const transformedOrder: Order = {
+              id: dbOrder.id,
+              createdAt: dbOrder.createdAt,
+              status: dbOrder.status || 'pending',
+              items: items || [],
+              total: typeof dbOrder.total === 'string' ? parseFloat(dbOrder.total) : dbOrder.total,
+              customer: {
+                name: dbOrder.customerName,
+                email: dbOrder.customerEmail,
+                address: dbOrder.address,
+                city: dbOrder.city,
+                postalCode: dbOrder.postalCode,
+                country: dbOrder.country,
+              },
+              userId: dbOrder.userId,
+            }
+            setOrder(transformedOrder)
+            setLoading(false)
+            return
+          }
+        }
+      } catch (error) {
+        console.log('[v0] Error fetching from database, falling back to localStorage')
+      }
+
+      // Fallback to localStorage
+      initializeStorage()
+      const orders = getOrders()
+      const foundOrder = orders.find(o => o.id === orderId)
+      setOrder(foundOrder || null)
+      setLoading(false)
     }
-    setLoading(false)
+
+    fetchOrder()
   }, [orderId])
+
+  // Auto-sync order status every 5 seconds
+  useEffect(() => {
+    if (!order || loading) return
+
+    const syncInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/admin/orders`)
+        const data = await response.json()
+
+        if (data.success && data.data) {
+          const dbOrder = data.data.find((o: any) => o.id === orderId)
+          if (dbOrder && dbOrder.status !== order.status) {
+            // Status changed, update it
+            let items: any[] = []
+            try {
+              if (dbOrder.items) {
+                items = typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items
+              }
+            } catch (e) {
+              console.log('[v0] Error parsing items')
+            }
+
+            setOrder(prev => prev ? {
+              ...prev,
+              status: dbOrder.status,
+              items: items || prev.items
+            } : null)
+          }
+        }
+      } catch (error) {
+        // Silent fail on sync errors
+        console.log('[v0] Sync error (non-critical)')
+      }
+    }, 5000) // Poll every 5 seconds
+
+    return () => clearInterval(syncInterval)
+  }, [order, orderId, loading])
 
   if (loading) {
     return (
@@ -247,7 +330,7 @@ export default function OrderDetailPage() {
             <p className="text-muted-foreground mb-4">
               If you have any questions about your order, please contact our support team.
             </p>
-            <a href="mailto:support@luxe.com" className="text-accent font-semibold hover:underline">
+            <a href="mailto:support@ads.com" className="text-accent font-semibold hover:underline">
               Contact Support
             </a>
           </div>
