@@ -26,7 +26,7 @@ export default function HeroCarousel() {
       {/* Floating Text Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
         <div className="text-center max-w-5xl mx-auto px-6 space-y-8">
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-serif-display text-white mb-8 tracking-tight drop-shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-1000 leading-tight">
+          <h1 className="text-6xl md:text-7xl lg:text-8xl text-white mb-8 tracking-tight drop-shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-1000 leading-tight font-heading">
             Timeless Elegance
           </h1>
           <p className="text-xl md:text-2xl lg:text-3xl text-white/90 leading-relaxed drop-shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 font-light tracking-wide">
