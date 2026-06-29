@@ -8,12 +8,13 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { useCart } from '@/context/CartContext'
-import { ShoppingBag, Check, Heart, Loader2 } from 'lucide-react'
+import { ShoppingBag, Check, Heart, Loader2, Truck } from 'lucide-react'
 import { formatPrice } from '@/lib/price-formatter'
 import ProductReviews from '@/components/ProductReviews'
 import { addToWishlist, removeFromWishlist, isInWishlist } from '@/lib/storage'
 import { addToRecentlyViewed } from '@/lib/recently-viewed'
 import RelatedProducts from '@/components/RelatedProducts'
+import { getStockStatus, getDeliveryEstimate } from '@/lib/utils/delivery'
 
 interface Product {
   id: string
@@ -40,6 +41,7 @@ export default function ProductDetail() {
   const [inWishlist, setInWishlist] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [delivery, setDelivery] = useState<any>(null)
 
   useEffect(() => {
     const loadProduct = () => {
@@ -65,6 +67,9 @@ export default function ProductDetail() {
     }
 
     loadProduct()
+    
+    // Load delivery estimate
+    getDeliveryEstimate().then(setDelivery)
   }, [params.id, params])
 
   const handleAddToCart = () => {
@@ -174,12 +179,26 @@ export default function ProductDetail() {
                 <p className="text-lg text-muted-foreground leading-relaxed">{product.description}</p>
               </div>
 
-              {/* Stock Status */}
-              <div className="mb-6">
-                {product.stock > 0 ? (
-                  <p className="text-sm font-semibold" style={{ color: 'var(--green-primary)' }}>In Stock ({product.stock} available)</p>
-                ) : (
-                  <p className="text-sm text-destructive font-semibold">Out of Stock</p>
+              {/* Stock Status & Urgency */}
+              <div className="mb-6 space-y-3">
+                <div className="flex items-center gap-3">
+                  {product.stock > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStockStatus(product.stock).color}`}>
+                        {getStockStatus(product.stock).text}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Out of Stock</span>
+                  )}
+                </div>
+                
+                {/* Delivery Estimate */}
+                {delivery && product.stock > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Truck className="w-4 h-4" />
+                    <span>Arrives by {delivery.minDate} - {delivery.maxDate}</span>
+                  </div>
                 )}
               </div>
 
