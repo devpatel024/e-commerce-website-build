@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import ProductShowcase from '@/components/ProductShowcase'
 import { getProducts, initializeStorage } from '@/lib/storage'
 import { useEffect, useState } from 'react'
+import { Product } from '@/lib/types'
 
 interface CollectionInfo {
   name: string
@@ -40,7 +41,7 @@ export default function CollectionDetail() {
   const params = useParams()
   const slug = params.slug as string
   const collectionInfo = collectionsInfo[slug]
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState<Product[]>([])
 
   useEffect(() => {
     initializeStorage()

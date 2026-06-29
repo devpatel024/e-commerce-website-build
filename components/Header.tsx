@@ -24,7 +24,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-gold-luxury/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-        <nav className="flex items-center justify-between h-20 transition-luxury">
+        <nav className="flex items-center justify-between h-20 transition-all duration-500">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-smooth group">
             <AnimatedLogo size="small" />
@@ -84,7 +84,7 @@ export default function Header() {
                 <span className="text-sm text-muted-foreground">{user.name}</span>
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-foreground text-background hover:bg-gold-luxury hover:text-foreground transition-luxury text-sm font-medium"
+                  className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-foreground text-background hover:bg-gold-luxury hover:text-foreground transition-all duration-500 text-sm font-medium"
                 >
                   <LogOut className="w-4 h-4" />
                   Logout
@@ -93,7 +93,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth/login"
-                className="inline-flex items-center px-6 py-2 rounded-full bg-foreground text-background hover:bg-gold-luxury hover:text-foreground transition-luxury text-sm font-medium"
+                className="inline-flex items-center px-6 py-2 rounded-full bg-foreground text-background hover:bg-gold-luxury hover:text-foreground transition-all duration-500 text-sm font-medium"
               >
                 Login
               </Link>
@@ -162,25 +162,25 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-4 pb-6 overflow-x-auto scrollbar-hide">
           <Link
             href="/products"
-            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury/30 text-foreground bg-background hover:border-gold-luxury hover:bg-gold-light/20 transition-luxury"
+            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury/30 text-foreground bg-background hover:border-gold-luxury hover:bg-gold-light/20 transition-all duration-500"
           >
             All Products
           </Link>
           <Link
             href="/products?category=jewellery"
-            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury/30 text-foreground bg-background hover:border-gold-luxury hover:bg-gold-light/20 transition-luxury"
+            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury/30 text-foreground bg-background hover:border-gold-luxury hover:bg-gold-light/20 transition-all duration-500"
           >
             Jewellery
           </Link>
           <Link
             href="/products?category=clothes"
-            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury/30 text-foreground bg-background hover:border-gold-luxury hover:bg-gold-light/20 transition-luxury"
+            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury/30 text-foreground bg-background hover:border-gold-luxury hover:bg-gold-light/20 transition-all duration-500"
           >
             Clothes
           </Link>
           <Link
             href="/products?badge=new"
-            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury text-gold-dark bg-gold-light/10 hover:border-gold-dark hover:bg-gold-light/20 transition-luxury"
+            className="px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap border border-gold-luxury text-gold-dark bg-gold-light/10 hover:border-gold-dark hover:bg-gold-light/20 transition-all duration-500"
           >
             New Arrivals
           </Link>

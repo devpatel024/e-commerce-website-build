@@ -545,11 +545,6 @@
     @apply transition-all duration-500 ease-in-out;
   }
 
-  /* Luxury transitions */
-  .transition-luxury {
-    @apply transition-all duration-500 cubic-bezier(0.4, 0.0, 0.2, 1);
-  }
-
   /* Link underline animation */
   @keyframes underline-expand {
     from {
@@ -574,25 +569,41 @@
 
   /* Luxury Button Styles */
   .btn-luxury {
-    @apply px-6 py-3 rounded-full font-semibold text-sm transition-luxury duration-500;
+    @apply px-6 py-3 rounded-full font-semibold text-sm;
+    transition: all 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
   .btn-luxury-primary {
-    @apply btn-luxury bg-primary text-primary-foreground hover:bg-gold-luxury hover:text-foreground;
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .btn-luxury-primary:hover {
+    background-color: var(--gold-luxury);
+    @apply text-foreground;
   }
 
   .btn-luxury-secondary {
-    @apply btn-luxury bg-background border-2 border-gold-luxury text-foreground hover:bg-gold-light/20;
+    @apply bg-background border-2 text-foreground;
+    border-color: var(--gold-luxury);
+  }
+
+  .btn-luxury-secondary:hover {
+    background-color: rgba(201, 168, 118, 0.2);
   }
 
   .btn-luxury-ghost {
-    @apply btn-luxury text-foreground hover:text-gold-luxury;
+    @apply text-foreground;
+  }
+
+  .btn-luxury-ghost:hover {
+    color: var(--gold-luxury);
   }
 
   /* Luxury Card Styles */
   .card-luxury {
-    @apply rounded-2xl p-6 md:p-8 transition-luxury duration-500;
+    @apply rounded-2xl p-6 md:p-8;
+    transition: all 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
@@ -619,7 +630,8 @@
 
   /* Photography-led Image Styling */
   .img-luxury {
-    @apply w-full rounded-2xl object-cover transition-luxury duration-500 hover:shadow-2xl;
+    @apply w-full rounded-2xl object-cover duration-500 hover:shadow-2xl;
+    transition: all 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .img-hero {
