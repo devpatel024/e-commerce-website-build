@@ -34,8 +34,15 @@ export default function AdminSettingsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      // In a real app, this would save to the database
-      localStorage.setItem('store_settings', JSON.stringify(formData))
+      // Save to database
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      
+      if (!response.ok) throw new Error('Failed to save settings')
+      
       setSuccessMessage('Settings saved successfully!')
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {

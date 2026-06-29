@@ -88,6 +88,8 @@ export const order = pgTable('order', {
   items: jsonb('items'),
   subtotal: numeric('subtotal', { precision: 10, scale: 2 }).notNull(),
   total: numeric('total', { precision: 10, scale: 2 }).notNull(),
+  taxAmount: numeric('taxAmount', { precision: 10, scale: 2 }).default('0'),
+  gstPercentage: numeric('gstPercentage', { precision: 5, scale: 2 }).default('0'),
   customerName: text('customerName').notNull(),
   customerEmail: text('customerEmail').notNull(),
   address: text('address').notNull(),
@@ -115,6 +117,44 @@ export const review = pgTable('review', {
   updatedAt: timestamp('updatedAt', { withTimezone: true }).notNull().defaultNow(),
 })
 
+export const collection = pgTable('collection', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  description: text('description'),
+  bannerImage: text('bannerImage'),
+  createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const collectionProduct = pgTable('collectionProduct', {
+  collectionId: uuid('collectionId')
+    .notNull()
+    .references(() => collection.id, { onDelete: 'cascade' }),
+  productId: uuid('productId')
+    .notNull()
+    .references(() => product.id, { onDelete: 'cascade' }),
+})
+
+export const giftCard = pgTable('giftCard', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  code: text('code').notNull().unique(),
+  denomination: numeric('denomination', { precision: 10, scale: 2 }).notNull(),
+  balance: numeric('balance', { precision: 10, scale: 2 }).notNull(),
+  isRedeemed: boolean('isRedeemed').default(false),
+  redeemedBy: text('redeemedBy'),
+  redeemedAt: timestamp('redeemedAt', { withTimezone: true }),
+  createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp('expiresAt', { withTimezone: true }),
+})
+
+export const settings = pgTable('settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull().unique(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).notNull().defaultNow(),
+})
+
 // Relations
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
@@ -132,5 +172,20 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
+  }),
+}))
+
+export const collectionRelations = relations(collection, ({ many }) => ({
+  products: many(collectionProduct),
+}))
+
+export const collectionProductRelations = relations(collectionProduct, ({ one }) => ({
+  collection: one(collection, {
+    fields: [collectionProduct.collectionId],
+    references: [collection.id],
+  }),
+  product: one(product, {
+    fields: [collectionProduct.productId],
+    references: [product.id],
   }),
 }))
