@@ -16,6 +16,7 @@ export default function OrderDetailPage() {
   const orderId = params.id as string
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -159,6 +160,32 @@ export default function OrderDetailPage() {
   ]
 
   const statusIndex = statusSteps.findIndex(s => s.status === order.status)
+
+  const handleDownloadInvoice = async () => {
+    try {
+      setDownloadingInvoice(true)
+      const response = await fetch(`/api/orders/${order.id}/invoice`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to download invoice')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice-${order.id.slice(0, 8)}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('[v0] Error downloading invoice:', error)
+      alert('Failed to download invoice. Please try again.')
+    } finally {
+      setDownloadingInvoice(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -308,12 +335,13 @@ export default function OrderDetailPage() {
 
               {/* Actions */}
               <div className="space-y-2">
-                <a
-                  href={`/api/orders/${order.id}/invoice`}
-                  className="block w-full text-center bg-foreground text-background py-2 rounded font-semibold hover:bg-accent transition-colors"
+                <button
+                  onClick={handleDownloadInvoice}
+                  disabled={downloadingInvoice}
+                  className="block w-full text-center bg-foreground text-background py-2 rounded font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Download Invoice
-                </a>
+                  {downloadingInvoice ? 'Downloading...' : 'Download Invoice'}
+                </button>
                 <button
                   onClick={() => window.print()}
                   className="w-full border border-border text-foreground py-2 rounded font-semibold hover:border-foreground transition-colors"

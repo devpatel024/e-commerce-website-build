@@ -1,50 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jsPDF from 'jspdf'
 
-// Helper function to fetch order from database
+// Helper function to fetch order from database using Drizzle
 async function getOrderFromDatabase(orderId: string) {
   try {
-    // Fetch all orders from the admin endpoint
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000'
-    
-    const response = await fetch(`${baseUrl}/api/admin/orders`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
+    const { db } = await import('@/lib/db')
+    const { eq } = await import('drizzle-orm')
+    const { order } = await import('@/lib/db/schema')
 
-    const data = await response.json()
+    const result = await db.select().from(order).where(eq(order.id, orderId)).limit(1)
 
-    if (data.success && data.data) {
-      const order = data.data.find((o: any) => o.id === orderId)
-      if (order) {
-        let items: any[] = []
-        try {
-          if (order.items) {
-            items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items
-          }
-        } catch (e) {
-          console.log('[v0] Error parsing items')
+    if (result && result.length > 0) {
+      const dbOrder = result[0]
+      let items: any[] = []
+      try {
+        if (dbOrder.items) {
+          items = typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : (dbOrder.items as any[])
         }
+      } catch (e) {
+        console.log('[v0] Error parsing items')
+      }
 
-        return {
-          id: order.id,
-          status: order.status,
-          items,
-          subtotal: order.subtotal,
-          total: order.total,
-          customerName: order.customerName,
-          customerEmail: order.customerEmail,
-          address: order.address,
-          city: order.city,
-          postalCode: order.postalCode,
-          country: order.country,
-          createdAt: order.createdAt,
-        }
+      return {
+        id: dbOrder.id,
+        status: dbOrder.status,
+        items,
+        subtotal: dbOrder.subtotal,
+        total: dbOrder.total,
+        customerName: dbOrder.customerName,
+        customerEmail: dbOrder.customerEmail,
+        address: dbOrder.address,
+        city: dbOrder.city,
+        postalCode: dbOrder.postalCode,
+        country: dbOrder.country,
+        createdAt: dbOrder.createdAt,
       }
     }
   } catch (error) {
@@ -106,7 +95,7 @@ export async function GET(
     yPosition += 6
     doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, margin, yPosition)
     yPosition += 6
-    doc.text(`Status: ${order.status.toUpperCase()}`, margin, yPosition)
+    doc.text(`Status: ${(order.status || 'pending').toUpperCase()}`, margin, yPosition)
     yPosition += 12
 
     // Customer Information
